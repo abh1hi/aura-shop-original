@@ -1,0 +1,14 @@
+
+import api from './api';
+
+const API_URL = 'https://3czzqk3l-5000.use2.devtunnels.ms/api/categories/';
+
+const getCategories = async () => {
+  let url = new URL(API_URL);
+  url.searchParams.append('time', new Date().getTime());
+  return await api(url);
+};
+
+export default {
+  getCategories,
+};
