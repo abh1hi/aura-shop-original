@@ -25,6 +25,10 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
       default: 'user', // Defaults to 'user'. Can be manually set to 'admin' in the database.
+    },
+    brand: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Brand',
     }
   },
   {

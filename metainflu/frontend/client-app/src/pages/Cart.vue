@@ -143,24 +143,7 @@
         </div>
       </div>
 
-      <nav class="bottom-navigation">
-        <router-link to="/" class="nav-item">
-          <i class="fas fa-home"></i>
-          <span>Home</span>
-        </router-link>
-        <router-link to="/shop" class="nav-item">
-          <i class="fas fa-search"></i>
-          <span>Shop</span>
-        </router-link>
-        <router-link to="/cart" class="nav-item active">
-          <i class="fas fa-shopping-bag"></i>
-          <span>Cart</span>
-        </router-link>
-        <router-link to="/account" class="nav-item">
-          <i class="fas fa-user"></i>
-          <span>Account</span>
-        </router-link>
-      </nav>
+     
 
       <transition name="modal">
         <div v-if="showClearModal" class="modal-overlay" @click="closeClearModal">

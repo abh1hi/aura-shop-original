@@ -1,5 +1,6 @@
 const Category = require('../models/Category');
 const asyncHandler = require('express-async-handler');
+const slugify = require('slugify');
 
 // @desc    Fetch all categories
 // @route   GET /api/categories
@@ -27,12 +28,26 @@ const getCategoryById = asyncHandler(async (req, res) => {
 // @route   POST /api/categories
 // @access  Private/Admin
 const createCategory = asyncHandler(async (req, res) => {
-  const { name, imageUrl, parentCategory } = req.body;
+  const { name, description, parentCategory, filters, image } = req.body;
+
+  const slug = slugify(name, { lower: true });
+
+  let path = [slug];
+  if (parentCategory) {
+    const parent = await Category.findById(parentCategory);
+    if (parent) {
+      path = [...parent.path, slug];
+    }
+  }
 
   const category = new Category({
     name,
-    imageUrl,
+    slug,
+    description,
     parentCategory,
+    path,
+    filters,
+    image,
   });
 
   const createdCategory = await category.save();
@@ -43,14 +58,32 @@ const createCategory = asyncHandler(async (req, res) => {
 // @route   PUT /api/categories/:id
 // @access  Private/Admin
 const updateCategory = asyncHandler(async (req, res) => {
-  const { name, imageUrl, parentCategory } = req.body;
+  const { name, description, parentCategory, filters, image, status } = req.body;
 
   const category = await Category.findById(req.params.id);
 
   if (category) {
-    category.name = name;
-    category.imageUrl = imageUrl;
-    category.parentCategory = parentCategory;
+    category.name = name || category.name;
+    category.description = description || category.description;
+    category.parentCategory = parentCategory || category.parentCategory;
+    category.filters = filters || category.filters;
+    category.image = image || category.image;
+    category.status = status || category.status;
+
+    if (name) {
+      category.slug = slugify(name, { lower: true });
+    }
+
+    if (name || parentCategory) {
+        let path = [category.slug];
+        if (category.parentCategory) {
+            const parent = await Category.findById(category.parentCategory);
+            if (parent) {
+                path = [...parent.path, category.slug];
+            }
+        }
+        category.path = path;
+    }
 
     const updatedCategory = await category.save();
     res.json(updatedCategory);

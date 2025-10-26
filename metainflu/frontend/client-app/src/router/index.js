@@ -16,6 +16,7 @@ import CustomerService from '../pages/CustopmerService.vue';
 import LiveChat from '../pages/LiveChat.vue';
 import Shop from '../pages/Shop.vue';
 import ProductDetail from '../pages/ProductDetail.vue';
+import BrandPage from '../pages/BrandPage.vue';
 
 
 const routes = [
@@ -24,6 +25,11 @@ const routes = [
     name: 'Home',
     // Use HomeNotLogin as default, redirect in beforeEach if logged in
     component: HomeNotLogin,
+  },
+  {
+    path: '/brand/:slug',
+    name: 'BrandPage',
+    component: BrandPage,
   },
   {
     path: '/home-logged-in',

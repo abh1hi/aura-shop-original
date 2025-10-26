@@ -1,24 +1,21 @@
 const mongoose = require('mongoose');
 
 const attributeSchema = new mongoose.Schema({
-  name: { type: String, required: true },          // e.g., "Color", "Material"
-  value: { type: String, required: true },         // e.g., "Blue", "Cotton"
-  hexCode: { type: String },                       // For color display, e.g., "#112233"
-  regionCode: { type: String },                    // For regional/language filtered products
-  unit: { type: String },                          // For dimensions, weight, etc.
+  name: { type: String, required: true },
+  value: { type: String, required: true },
+  hexCode: { type: String },
+  regionCode: { type: String },
+  unit: { type: String },
 });
 
-// For array attributes (multiple values)
 const arrayAttributeSchema = new mongoose.Schema({
   name: { type: String, required: true },
   values: [String],
 });
 
-// Variant Schema (specific SKU-level differences)
 const variantSchema = new mongoose.Schema({
-  // Remove unique requirement to avoid DB-level duplicates for null/empty; uniqueness enforced via partial index
   sku: { type: String, required: true },
-  attributes: [attributeSchema],                  // e.g. {name: "Size", value: "L"}
+  attributes: [attributeSchema],
   price: { type: Number, required: true },
   stock: { type: Number, required: true, default: 0 },
   images: [{ type: String }],
@@ -29,58 +26,208 @@ const variantSchema = new mongoose.Schema({
   }],
 });
 
-// Main Product Schema
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  description: { type: String },
-  brand: { type: String },
-  modelNumber: { type: String },                          // MPN/Model
-  gtin: { type: String },                                 // Global Trade Item Number/barcode/ISBN
+  slug: { type: String, unique: true },
+  description: { type: String, maxlength: 5000 },
+  brand: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Brand',
+  },
+  modelNumber: { type: String },
+  gtin: { type: String },
   categories: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
   }],
-  attributes: [attributeSchema],                          // For global product attributes
-  arrayAttributes: [arrayAttributeSchema],                // For attributes like certifications, features, includedItems
+  searchKeywords: [String],
+  popularityScore: { type: Number, default: 0 },
+  translations: {
+    name: { type: Map, of: String },
+    description: { type: Map, of: String },
+  },
+  currency: { type: String, default: "INR" },
+  regionPricing: [{
+    regionCode: String,
+    price: Number
+  }],
+  priceHistory: [{ date: Date, price: Number }],
+  discount: {
+    type: { type: String, enum: ['percentage', 'flat'] },
+    value: Number,
+    startDate: Date,
+    endDate: Date,
+  },
+  shippingDetails: {
+    isFreeShipping: { type: Boolean, default: false },
+    fulfillmentType: { type: String, enum: ['FBA', 'Seller', 'ThirdParty'] },
+    returnPolicyDays: { type: Number, default: 7 },
+    fragile: { type: Boolean, default: false },
+  },
+  offers: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    price: Number,
+    stock: Number,
+    rating: Number,
+    shippingTime: String,
+  }],
+  reviews: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    rating: Number,
+    comment: String,
+    createdAt: { type: Date, default: Date.now },
+  }],
+  questions: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    question: String,
+    answers: [{
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      answer: String
+    }]
+  }],
+  wishlistCount: { type: Number, default: 0 },
+  views: { type: Number, default: 0 },
+  purchases: { type: Number, default: 0 },
+  lastViewedAt: Date,
+  isApproved: { type: Boolean, default: false },
+  isFeatured: { type: Boolean, default: false },
+  isArchived: { type: Boolean, default: false },
+  adminNotes: String,
+  relatedProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+  similarProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+  version: { type: Number, default: 1 },
+  previousVersions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+  bundles: [{
+    products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+    discount: Number,
+    bundleName: String
+  }],
+  lifecycleStatus: {
+    type: String,
+    enum: ['active', 'coming_soon', 'discontinued', 'out_of_stock'],
+    default: 'active'
+  },
+  releaseDate: Date,
+  discontinuedDate: Date,
+  taxDetails: {
+    taxCode: String,
+    gstRate: Number,
+    hsnCode: String,
+    vatApplicable: Boolean
+  },
+  currencyPrices: {
+    USD: Number,
+    EUR: Number,
+    INR: Number,
+    GBP: Number
+  },
+  restrictedRegions: [String],
+  embeddingVector: [Number],
+  recommendationTags: [String],
+  targetAudience: {
+    gender: [String],
+    ageRange: { min: Number, max: Number },
+    lifestyleTags: [String],
+  },
+  clicks: { type: Number, default: 0 },
+  addToCartCount: { type: Number, default: 0 },
+  conversionRate: { type: Number, default: 0 },
+  inventoryByLocation: [{
+    warehouseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Warehouse' },
+    stock: Number,
+    reserved: Number,
+    lastRestocked: Date,
+  }],
+  supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
+  procurementCost: Number,
+  leadTimeDays: Number,
+  moderationStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+  externalIds: {
+    amazonASIN: String,
+    flipkartSKU: String,
+    shopifyProductId: String,
+    customIntegrationIds: Map
+  },
+  webhooks: [{
+    event: String,
+    endpoint: String
+  }],
+  metrics: {
+    dailySales: { type: Number, default: 0 },
+    weeklySales: { type: Number, default: 0 },
+    returnRate: { type: Number, default: 0 },
+    averageProfitMargin: { type: Number, default: 0 },
+  },
+  autoTags: [String],
+  manualTags: [String],
+  reviewInsights: {
+    averageSentiment: Number,
+    commonKeywords: [String],
+  },
+  aiCategoryPrediction: {
+    predictedCategory: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
+    confidenceScore: Number
+  },
+  moderationFlags: {
+    containsProhibitedTerms: Boolean,
+    flaggedByUsers: Number,
+    autoHidden: Boolean,
+  },
+  changeLog: [{
+    field: String,
+    oldValue: mongoose.Schema.Types.Mixed,
+    newValue: mongoose.Schema.Types.Mixed,
+    changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    changedAt: Date,
+  }],
+  attributes: [attributeSchema],
+  arrayAttributes: [arrayAttributeSchema],
   variants: [variantSchema],
   images: [{
     url: { type: String },
     altText: { type: String },
     position: { type: Number },
-    variantSku: { type: String, default: null }
+    variantSku: { type: String, default: null },
+    isPrimary: { type: Boolean, default: false },
   }],
-  weight: { type: Number },                               // Numeric (with unit in attribute)
+  weight: { type: Number },
   dimensions: {
     length: { type: Number },
     width: { type: Number },
     height: { type: Number },
-    unit: { type: String },                               // For dimension units (cm/inch)
+    unit: { type: String },
   },
-  pattern: { type: String },                              // "Striped", "Checked", "Solid"
-  style: { type: String },                                // "Boho", "Formal", etc.
-  ageGroup: { type: String },                             // "Adult", "Infant", etc.
-  gender: { type: String },                               // "Men", "Women", "Unisex"
-  releaseYear: { type: String },                          // "2025"
-  season: { type: String },                               // "Spring", "Autumn", ...
-  careInstructions: { type: String },                     // "Hand wash"
-  warranty: { type: String },                             // "2 years manufacturer"
-  sustainability: [String],                               // e.g., ["Vegan", "FSC"]
-  certifications: [String],                               // e.g., ["CE", "FCC"]
+  pattern: { type: String },
+  style: { type: String },
+  ageGroup: { type: String },
+  gender: { type: String },
+  releaseYear: { type: String },
+  season: { type: String },
+  careInstructions: { type: String },
+  warranty: { type: String },
+  sustainability: [String],
+  certifications: [String],
   power: {
     voltage: { type: Number },
     unit: { type: String, default: "V" },
-  },                                                      // e.g. {voltage: 220, unit:"V"}
+  },
   technicalSpecs: [{
-    key: { type: String },                                // "RAM", "Battery Type"
+    key: { type: String },
     value: { type: String },
+    group: { type: String },
   }],
-  ingredients: [String],                                  // Cosmetics/food allergen info
-  expirationDate: { type: Date },                         // For perishables
+  ingredients: [String],
+  expirationDate: { type: Date },
   safetyWarnings: { type: String },
-  inTheBox: [String],                                     // "Charger", "Manual", ...
+  inTheBox: [String],
   bundleContents: [String],
-  regionOfOrigin: { type: String },                       // Country, region, e.g., "India"
-  user: {                                                 // Vendor/seller
+  regionOfOrigin: { type: String },
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
@@ -89,12 +236,16 @@ const productSchema = new mongoose.Schema({
   ratings: {
     average: { type: Number, default: 0 },
     count: { type: Number, default: 0 },
+    breakdown: {
+      1: { type: Number, default: 0 },
+      2: { type: Number, default: 0 },
+      3: { type: Number, default: 0 },
+      4: { type: Number, default: 0 },
+      5: { type: Number, default: 0 },
+    }
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date },
 }, { timestamps: true });
 
-// Add a partial unique index on variants.sku so uniqueness applies only when a non-empty string exists
 productSchema.index(
   { 'variants.sku': 1 },
   { unique: true, partialFilterExpression: { 'variants.sku': { $exists: true, $type: 'string', $ne: '' } } }

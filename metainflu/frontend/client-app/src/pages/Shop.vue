@@ -2,14 +2,20 @@
   <div 
     class="shop-page" 
     :class="{ 'mobile-view': isMobile, 'desktop-view': !isMobile }"
-    @touchstart="onTouchStart"
-    @touchmove="onTouchMove"
-    @touchend="onTouchEnd"
   >
     <!-- Mobile UI -->
     <div v-if="isMobile">
-      <main class="main-content">
+      <main 
+        class="main-content"
+        @touchstart="onTouchStart"
+        @touchmove="onTouchMove"
+        @touchend="onTouchEnd"
+      >
         <div class="filter-sort-bar" v-if="!showSearch">
+          <button @click="toggleFilters" class="filter-button">
+            <i class="fas fa-filter"></i>
+            <span>Filters</span>
+          </button>
           <div class="sort-options">
             <select v-model="sortOption" class="sort-select">
               <option value="new">Newest First</option>
@@ -17,20 +23,6 @@
               <option value="high-low">Price: High to Low</option>
               <option value="popular">Most Popular</option>
             </select>
-          </div>
-          <div class="view-toggle">
-            <button 
-              :class="['view-btn', { active: viewMode === 'grid' }]"
-              @click="viewMode = 'grid'"
-            >
-              <i class="fas fa-th"></i>
-            </button>
-            <button 
-              :class="['view-btn', { active: viewMode === 'list' }]"
-              @click="viewMode = 'list'"
-            >
-              <i class="fas fa-bars"></i>
-            </button>
           </div>
         </div>
 
@@ -91,10 +83,17 @@
         </div>
       </main>
 
-      <transition name="slide-filter">
+      <transition name="slide-up">
         <div v-if="showFilters" class="filter-overlay" @click="closeFilters">
-          <div class="filter-sidebar" @click.stop>
+          <div 
+            class="filter-sheet" 
+            @click.stop
+            @touchstart="onFilterSheetTouchStart"
+            @touchmove="onFilterSheetTouchMove"
+            @touchend="onFilterSheetTouchEnd"
+          >
             <div class="filter-header">
+              <div class="filter-handle"></div>
               <h3>Filters</h3>
               <button @click="closeFilters" class="close-btn">
                 <i class="fas fa-times"></i>
@@ -102,40 +101,33 @@
             </div>
             
             <div class="filter-content">
-              <div class="filter-section">
-                <h4>Price Range</h4>
-                <div class="price-inputs">
-                  <input type="number" v-model="priceRange.min" placeholder="Min" class="price-input"/>
-                  <span>-</span>
-                  <input type="number" v-model="priceRange.max" placeholder="Max" class="price-input"/>
-                </div>
-              </div>
+              <FilterGroup title="Price Range" :start-open="true">
+                <PriceSlider v-model="priceRange" :min="0" :max="1000" />
+              </FilterGroup>
               
-              <div class="filter-section">
-                <h4>Size</h4>
+              <FilterGroup title="Size">
                 <div class="size-options">
-                  <label v-for="size in availableSizes" :key="size" class="size-option">
+                  <label v-for="size in availableSizes" :key="size" class="size-option" :class="{ selected: selectedSizes.includes(size) }">
                     <input type="checkbox" :value="size" v-model="selectedSizes"/>
                     <span class="size-label">{{ size }}</span>
                   </label>
                 </div>
-              </div>
+              </FilterGroup>
               
-              <div class="filter-section">
-                <h4>Colors</h4>
+              <FilterGroup title="Colors">
                 <div class="color-options">
-                  <label v-for="color in availableColors" :key="color" class="color-option">
+                  <label v-for="color in availableColors" :key="color" class="color-option" :class="{ selected: selectedColors.includes(color) }">
                     <input type="checkbox" :value="color" v-model="selectedColors"/>
                     <span class="color-swatch" :style="{ backgroundColor: color }"></span>
                     <span class="color-name">{{ color }}</span>
                   </label>
                 </div>
-              </div>
+              </FilterGroup>
             </div>
             
             <div class="filter-actions">
               <button @click="clearAllFilters" class="clear-btn">Clear All</button>
-              <button @click="applyFilters" class="apply-btn">Apply Filters</button>
+              <button @click="applyFilters" class="apply-btn">Apply</button>
             </div>
           </div>
         </div>
@@ -148,8 +140,7 @@
         <aside class="desktop-filter-sidebar">
           <h3>Filters</h3>
           <div class="filter-content">
-            <div class="filter-section">
-              <h4>Category</h4>
+            <FilterGroup title="Category" :start-open="true">
               <ul class="category-list">
                 <li 
                   v-for="category in categories" 
@@ -161,34 +152,27 @@
                 </li>
                 <li :class="{ active: selectedCategoryId === null }" @click="selectCategory(null)">All</li>
               </ul>
-            </div>
-            <div class="filter-section">
-              <h4>Price Range</h4>
-              <div class="price-inputs">
-                <input type="number" v-model="priceRange.min" placeholder="Min" class="price-input"/>
-                <span>-</span>
-                <input type="number" v-model="priceRange.max" placeholder="Max" class="price-input"/>
-              </div>
-            </div>
-            <div class="filter-section">
-              <h4>Size</h4>
+            </FilterGroup>
+            <FilterGroup title="Price Range" :start-open="true">
+              <PriceSlider v-model="priceRange" :min="0" :max="1000" />
+            </FilterGroup>
+            <FilterGroup title="Size">
               <div class="size-options">
-                <label v-for="size in availableSizes" :key="size" class="size-option">
+                <label v-for="size in availableSizes" :key="size" class="size-option" :class="{ selected: selectedSizes.includes(size) }">
                   <input type="checkbox" :value="size" v-model="selectedSizes"/>
                   <span class="size-label">{{ size }}</span>
                 </label>
               </div>
-            </div>
-            <div class="filter-section">
-              <h4>Colors</h4>
+            </FilterGroup>
+            <FilterGroup title="Colors">
               <div class="color-options">
-                <label v-for="color in availableColors" :key="color" class="color-option">
+                <label v-for="color in availableColors" :key="color" class="color-option" :class="{ selected: selectedColors.includes(color) }">
                   <input type="checkbox" :value="color" v-model="selectedColors"/>
                   <span class="color-swatch" :style="{ backgroundColor: color }"></span>
                   <span class="color-name">{{ color }}</span>
                 </label>
               </div>
-            </div>
+            </FilterGroup>
           </div>
         </aside>
 
@@ -274,6 +258,8 @@ import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import ProductCard from '../components/ProductCard.vue'
 import ProductPeekModal from '../components/ProductPeekModal.vue'
+import FilterGroup from '../components/FilterGroup.vue'
+import PriceSlider from '../components/PriceSlider.vue'
 import productService from '../services/productService'
 import categoryService from '../services/categoryService'
 import { useCart } from '../composables/useCart'
@@ -309,9 +295,6 @@ const showSearch = ref(false)
 const showFilters = ref(false)
 const searchQuery = ref('')
 const searchInput = ref(null)
-const touchStartX = ref(0)
-const touchEndX = ref(0)
-const swipeThreshold = 200
 
 // Peek functionality
 const showPeek = ref(false)
@@ -319,11 +302,24 @@ const peekProduct = ref(null)
 const isPeeking = ref(false)
 
 // Filter options
-const priceRange = ref({ min: null, max: null })
+const priceRange = ref({ min: 0, max: 1000 })
 const selectedSizes = ref([])
 const selectedColors = ref([])
 const availableSizes = ref(['XS', 'S', 'M', 'L', 'XL', 'XXL'])
 const availableColors = ref(['Black', 'White', 'Gray', 'Navy', 'Brown', 'Beige'])
+
+// Touch gesture for filter sheet
+const filterSheetTouchStartY = ref(0)
+const filterSheetTouchCurrentY = ref(0)
+const filterSheetSwipeThreshold = 100
+
+// Touch gesture for main content
+const touchStartX = ref(0)
+const touchEndX = ref(0)
+const touchStartY = ref(0)
+const touchEndY = ref(0)
+const swipeThreshold = 100
+
 
 // Fixed computed properties with proper variant handling
 const productsWithVariants = computed(() => {
@@ -495,7 +491,7 @@ const closeFilters = () => {
 const clearAllFilters = () => {
   selectedCategoryId.value = null
   searchQuery.value = ''
-  priceRange.value = { min: null, max: null }
+  priceRange.value = { min: 0, max: 1000 }
   selectedSizes.value = []
   selectedColors.value = []
   displayedCount.value = 20
@@ -516,10 +512,6 @@ const loadMore = () => {
 
 const goToProduct = (product) => {
   router.push({ name: 'ProductDetail', params: { id: product._id } })
-}
-
-const onSwipe = (event) => {
-  console.log('Swipe detected:', event)
 }
 
 const onFavoriteToggled = (data) => {
@@ -590,35 +582,59 @@ const onPeekViewProduct = (product) => {
   closePeek()
 }
 
+const onFilterSheetTouchStart = (event) => {
+  filterSheetTouchStartY.value = event.touches[0].clientY
+}
+
+const onFilterSheetTouchMove = (event) => {
+  filterSheetTouchCurrentY.value = event.touches[0].clientY
+}
+
+const onFilterSheetTouchEnd = () => {
+  if (filterSheetTouchCurrentY.value - filterSheetTouchStartY.value > filterSheetSwipeThreshold) {
+    closeFilters()
+  }
+  filterSheetTouchStartY.value = 0
+  filterSheetTouchCurrentY.value = 0
+}
+
 const onTouchStart = (event) => {
   if (isPeeking.value) return
   touchStartX.value = event.touches[0].clientX
+  touchStartY.value = event.touches[0].clientY
 }
 
 const onTouchMove = (event) => {
   if (isPeeking.value) return
   touchEndX.value = event.touches[0].clientX
+  touchEndY.value = event.touches[0].clientY
 }
 
 const onTouchEnd = () => {
   if (isPeeking.value) return
   if (touchStartX.value === 0 || touchEndX.value === 0) return
-  const swipeDistance = touchEndX.value - touchStartX.value
-  
-  if (swipeDistance > swipeThreshold) {
-    router.push('/')
-  } else if (swipeDistance < -swipeThreshold) {
-    router.push('/cart')
+
+  const swipeDistanceX = touchEndX.value - touchStartX.value
+  const swipeDistanceY = touchEndY.value - touchStartY.value
+
+  if (Math.abs(swipeDistanceX) > Math.abs(swipeDistanceY)) {
+    if (swipeDistanceX > swipeThreshold) {
+      toggleFilters()
+    }
   }
 
   touchStartX.value = 0
   touchEndX.value = 0
+  touchStartY.value = 0
+  touchEndY.value = 0
 }
 
 // Watchers
-watch([selectedCategoryId, sortOption], () => {
-  displayedCount.value = 20
-})
+watch([selectedCategoryId, sortOption, selectedSizes, selectedColors, priceRange], () => {
+  if (!isMobile.value) {
+    displayedCount.value = 20
+  }
+}, { deep: true })
 
 // Lifecycle
 onMounted(() => {
@@ -630,15 +646,11 @@ onMounted(() => {
 /* Base Styles */
 .shop-page {
   min-height: 100vh;
-  background-color: #f8f9fa;
-  touch-action: pan-y;
+  background-color: #fff;
+  color: #1d1d1f;
 }
 
 /* Mobile-First Design */
-.mobile-first {
-  padding-bottom: 80px;
-}
-
 .main-content {
   padding: 0 1rem;
 }
@@ -647,41 +659,36 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
   padding: 1rem 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.filter-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 1px solid #d2d2d7;
+  border-radius: 980px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 .sort-select {
   padding: 8px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #d2d2d7;
   border-radius: 8px;
-  background: white;
+  background: #f5f5f7;
   font-size: 0.9rem;
-}
-
-.view-toggle {
-  display: flex;
-  gap: 4px;
-  background: #f1f5f9;
-  border-radius: 8px;
-  padding: 4px;
-}
-
-.view-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: none;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-}
-
-.view-btn.active {
-  background: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
 }
 
 .loading-container, .error-container, .empty-container {
@@ -697,7 +704,7 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border: 3px solid #f3f4f6;
-  border-top: 3px solid #1a1a1a;
+  border-top: 3px solid #0071e3;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -714,30 +721,30 @@ onMounted(() => {
 
 .loading-text, .error-text {
   margin-top: 1rem;
-  color: #64748b;
+  color: #6e6e73;
 }
 
 .error-icon, .empty-icon {
   font-size: 3rem;
-  color: #64748b;
+  color: #6e6e73;
   margin-bottom: 1rem;
 }
 
 .retry-btn, .clear-filters-btn {
   margin-top: 1rem;
   padding: 0.75rem 1.5rem;
-  background: #1a1a1a;
+  background: #0071e3;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 980px;
   font-weight: 500;
   cursor: pointer;
 }
 
 .results-info {
-  margin-bottom: 1rem;
+  margin: 1rem 0;
   font-size: 0.9rem;
-  color: #64748b;
+  color: #6e6e73;
 }
 
 .products-list.grid-view {
@@ -752,10 +759,6 @@ onMounted(() => {
   gap: 1rem;
 }
 
-.product-item {
-  transition: all 0.3s ease;
-}
-
 .load-more-container {
   display: flex;
   justify-content: center;
@@ -764,24 +767,11 @@ onMounted(() => {
 
 .load-more-btn {
   padding: 1rem 2rem;
-  background: white;
-  border: 2px solid #e2e8f0;
-  border-radius: 25px;
+  background: #f5f5f7;
+  border: 1px solid #d2d2d7;
+  border-radius: 980px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.load-more-btn:hover {
-  border-color: #1a1a1a;
-}
-
-.load-more-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .filter-overlay {
@@ -790,169 +780,240 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.4);
   z-index: 100;
+  display: flex;
+  align-items: flex-end;
 }
 
-.filter-sidebar {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 300px;
-  max-width: 85vw;
-  background: white;
+.filter-sheet {
+  background: #fff;
+  width: 100%;
+  max-height: 90vh;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
 }
 
 .filter-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e5e5;
+  position: relative;
+}
+
+.filter-handle {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background-color: #d2d2d7;
+  border-radius: 2px;
 }
 
 .filter-header h3 {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
+  text-align: center;
+  flex-grow: 1;
+  padding-top: 1.5rem;
 }
 
 .close-btn {
   width: 32px;
   height: 32px;
   border: none;
-  background: none;
-  border-radius: 6px;
+  background: #f5f5f7;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
 }
 
 .filter-content {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
-}
-
-.filter-section {
-  margin-bottom: 2rem;
-}
-
-.filter-section h4 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
+  padding: 1rem 1.5rem;
 }
 
 .price-inputs {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .price-input {
   flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d2d2d7;
+  border-radius: 12px;
+  background: #f5f5f7;
+  font-size: 1rem;
+  text-align: center;
 }
 
-.size-options, .color-options {
+.price-separator {
+  color: #6e6e73;
+}
+
+.size-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.75rem;
+}
+
+.size-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid #d2d2d7;
+  border-radius: 12px;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.size-option input[type="checkbox"] {
+  display: none;
+}
+
+.size-option .size-label {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.size-option input[type="checkbox"]:checked + .size-label {
+  color: #0071e3;
+}
+
+.size-option.selected {
+  border-color: #0071e3;
+  background-color: #f0f9ff;
+}
+
+.color-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+  gap: 1rem;
+}
+
+.color-option {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-
-.size-option, .color-option {
-  display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
 }
 
+.color-option input[type="checkbox"] {
+  display: none;
+}
+
 .color-swatch {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #d2d2d7;
+  transition: all 0.2s ease;
+}
+
+.color-option.selected .color-swatch {
+  box-shadow: 0 0 0 2px #0071e3;
+}
+
+.color-name {
+  font-size: 0.8rem;
+  color: #6e6e73;
 }
 
 .filter-actions {
   display: flex;
   gap: 1rem;
-  padding: 1rem;
-  border-top: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  border-top: 1px solid #e5e5e5;
+  background: #fff;
 }
 
 .clear-btn, .apply-btn {
   flex: 1;
-  padding: 0.75rem;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
+  padding: 1rem;
+  border-radius: 980px;
+  font-weight: 600;
   cursor: pointer;
+  text-align: center;
+  font-size: 1rem;
 }
 
 .clear-btn {
-  background: #f1f5f9;
-  color: #64748b;
+  background: #f5f5f7;
+  border: 1px solid #d2d2d7;
+  color: #1d1d1f;
 }
 
 .apply-btn {
-  background: #1a1a1a;
+  background: #0071e3;
+  border: 1px solid #0071e3;
   color: white;
 }
 
 /* Desktop Styles */
 .desktop-shop-page {
-  padding: 2rem;
+  padding: 2rem 3rem;
 }
 
 .desktop-container {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 2rem;
-  max-width: 1400px;
+  grid-template-columns: 300px 1fr;
+  gap: 3rem;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
 .desktop-filter-sidebar {
-  background: #fff;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-  height: fit-content;
   position: sticky;
   top: 2rem;
+  height: calc(100vh - 4rem);
+  overflow-y: auto;
 }
 
 .desktop-filter-sidebar h3 {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .category-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .category-list li {
   padding: 0.5rem 0;
   cursor: pointer;
-  font-weight: 500;
-  color: #4a5568;
+  font-weight: 400;
+  color: #1d1d1f;
   transition: color 0.2s;
 }
 
 .category-list li.active {
-  color: #000;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .desktop-main-content {
@@ -963,59 +1024,33 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  background: #fff;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  margin-bottom: 2rem;
 }
 
 .results-summary h2 {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
 }
 
 .results-summary p {
-  color: #718096;
-}
-
-.desktop-products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
+  color: #6e6e73;
+  margin-top: 0.25rem;
 }
 
 /* Animations */
-.slide-down-enter-active,
-.slide-down-leave-active {
-  transition: all 0.3s ease;
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.slide-down-enter-from,
-.slide-down-leave-to {
-  transform: translateY(-100%);
+.slide-up-enter-from,
+.slide-up-leave-to {
   opacity: 0;
 }
 
-.slide-filter-enter-active,
-.slide-filter-leave-active {
-  transition: all 0.3s ease;
-}
-
-.slide-filter-enter-from {
-  opacity: 0;
-}
-
-.slide-filter-enter-from .filter-sidebar {
-  transform: translateX(100%);
-}
-
-.slide-filter-leave-to {
-  opacity: 0;
-}
-
-.slide-filter-leave-to .filter-sidebar {
-  transform: translateX(100%);
+.slide-up-enter-from .filter-sheet,
+.slide-up-leave-to .filter-sheet {
+  transform: translateY(100%);
 }
 
 .fade-up-enter-active,
@@ -1027,17 +1062,5 @@ onMounted(() => {
 .fade-up-leave-to {
   opacity: 0;
   transform: translateY(20px);
-}
-
-@media (max-width: 767px) {
-  .desktop-view {
-    display: none;
-  }
-}
-
-@media (min-width: 768px) {
-  .mobile-first {
-    display: none;
-  }
 }
 </style>

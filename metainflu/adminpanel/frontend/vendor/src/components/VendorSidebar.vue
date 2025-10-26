@@ -28,7 +28,7 @@
 import { useRouter } from 'vue-router';
 import { globalState } from '../main.js';
 import authService from '../services/authService';
-import { HomeIcon, ChartBarIcon, ClipboardDocumentListIcon, CubeIcon, UserIcon, BellIcon, DocumentTextIcon } from '@heroicons/vue/24/outline';
+import { HomeIcon, ChartBarIcon, ClipboardDocumentListIcon, CubeIcon, UserIcon, BellIcon, DocumentTextIcon, BuildingStorefrontIcon } from '@heroicons/vue/24/outline';
 
 defineProps({ isOpen: { type: Boolean, required: true } });
 const emit = defineEmits(['close-sidebar']);
@@ -39,6 +39,7 @@ const navItems = [
   { name: 'Reports', path: '/reports', icon: ChartBarIcon },
   { name: 'My Tasks', path: '/tasks', icon: ClipboardDocumentListIcon },
   { name: 'Products', path: '/products', icon: CubeIcon },
+  { name: 'Brand Page', path: '/brand', icon: BuildingStorefrontIcon },
   { name: 'Invoices', path: '/invoices', icon: DocumentTextIcon },
   { name: 'Notifications', path: '/notifications', icon: BellIcon },
   { name: 'Account', path: '/account', icon: UserIcon },

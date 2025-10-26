@@ -9,11 +9,14 @@
         </transition>
       </router-view>
     </main>
+
+    <BottomNav />
   </div>
 </template>
 
 <script setup>
-import Navbar from './components/Navbar.vue'
+import Navbar from './components/Navbar.vue';
+import BottomNav from './components/BottomNav.vue';
 </script>
 
 <style>
@@ -69,7 +72,15 @@ body {
 /* Main Content */
 .main-content {
   flex-grow: 1;
-  padding-top: 5rem; /* Add padding to account for fixed navbar */
+  padding-top: 5rem; /* Corresponds to h-20 in Navbar */
+  /* Add padding to the bottom on mobile to account for BottomNav */
+  padding-bottom: 5rem; /* Corresponds to h-16 in BottomNav + extra space */
+}
+
+@media (min-width: 1024px) { /* lg breakpoint */
+  .main-content {
+    padding-bottom: 0; /* No bottom padding on desktop */
+  }
 }
 
 /* Transitions */

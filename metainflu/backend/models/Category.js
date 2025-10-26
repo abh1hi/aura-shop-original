@@ -4,20 +4,27 @@ const categorySchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
+  },
+  slug: {
+    type: String,
     unique: true,
   },
+  description: String,
   parentCategory: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'ParentCategory',
-    required: true,
+    ref: 'Category',
   },
+  path: [String],
+  filters: [{
+    name: String,
+    type: String,
+    options: [String],
+  }],
+  image: String,
   status: {
     type: String,
     enum: ['pending', 'approved'],
     default: 'approved',
-  },
-  imageUrl: {
-    type: String,
   },
 });
 

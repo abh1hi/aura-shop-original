@@ -6,13 +6,17 @@ const parentCategorySchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  description: {
+  slug: {
     type: String,
+    unique: true,
   },
-}, {
-  timestamps: true,
+  description: String,
+  image: String,
+  status: {
+    type: String,
+    enum: ['pending', 'approved'],
+    default: 'approved',
+  },
 });
 
-const ParentCategory = mongoose.model('ParentCategory', parentCategorySchema);
-
-module.exports = ParentCategory;
+module.exports = mongoose.model('ParentCategory', parentCategorySchema);

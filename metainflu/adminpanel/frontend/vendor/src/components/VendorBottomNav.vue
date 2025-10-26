@@ -11,13 +11,14 @@
 </template>
 
 <script setup>
-import { HomeIcon as HomeIconOutline, ChartBarIcon as ChartBarIconOutline, ClipboardDocumentListIcon as ClipboardDocumentListIconOutline, CubeIcon as CubeIconOutline } from '@heroicons/vue/24/outline';
-import { HomeIcon as HomeIconSolid, ChartBarIcon as ChartBarIconSolid, ClipboardDocumentListIcon as ClipboardDocumentListIconSolid, CubeIcon as CubeIconSolid } from '@heroicons/vue/24/solid';
+import { HomeIcon as HomeIconOutline, ChartBarIcon as ChartBarIconOutline, ClipboardDocumentListIcon as ClipboardDocumentListIconOutline, CubeIcon as CubeIconOutline, BuildingStorefrontIcon as BuildingStorefrontIconOutline } from '@heroicons/vue/24/outline';
+import { HomeIcon as HomeIconSolid, ChartBarIcon as ChartBarIconSolid, ClipboardDocumentListIcon as ClipboardDocumentListIconSolid, CubeIcon as CubeIconSolid, BuildingStorefrontIcon as BuildingStorefrontIconSolid } from '@heroicons/vue/24/solid';
 
 const navItems = [
   { name: 'Home', path: '/', outlineIcon: HomeIconOutline, solidIcon: HomeIconSolid },
   { name: 'Reports', path: '/reports', outlineIcon: ChartBarIconOutline, solidIcon: ChartBarIconSolid },
   { name: 'Tasks', path: '/tasks', outlineIcon: ClipboardDocumentListIconOutline, solidIcon: ClipboardDocumentListIconSolid },
   { name: 'Products', path: '/products', outlineIcon: CubeIconOutline, solidIcon: CubeIconSolid },
+  { name: 'Brand', path: '/brand', outlineIcon: BuildingStorefrontIconOutline, solidIcon: BuildingStorefrontIconSolid },
 ];
 </script>
