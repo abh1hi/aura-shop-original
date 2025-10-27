@@ -19,6 +19,9 @@ const vendorRoutes = require('./routes/vendorRoutes'); // Import vendor routes
 const homeRoutes = require('./routes/homeRoutes'); // Import home routes
 const parentCategoryRoutes = require('./routes/parentCategoryRoutes');
 const brandRoutes = require('./routes/brandRoutes');
+const wishlistRoutes = require('./routes/wishlistRoutes');
+const addressRoutes = require('./routes/addressRoutes');
+const geocodeRoutes = require('./routes/geocodeRoutes');
 
 const { errorHandler } = require('./middleware/errorMiddleware');
 const { protect } = require('./middleware/authMiddleware');
@@ -115,6 +118,9 @@ app.use('/api/vendor', vendorRoutes); // Use new vendor routes
 app.use('/api/home', homeRoutes);
 app.use('/api/parent-categories', parentCategoryRoutes);
 app.use('/api/brands', brandRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/geocode', geocodeRoutes);
 
 // Test protected route
 app.get('/api/protected', protect, (req, res) => {

@@ -1,21 +1,16 @@
 
-import api from './api';
+import { apiClient } from '../config/api';
 
-const API_URL = 'https://3czzqk3l-5000.use2.devtunnels.ms/api/products/';
-
-const getProducts = async (categoryId = null) => {
-  let url = new URL(API_URL);
+const getProducts = (categoryId = null) => {
+  let endpoint = '/products';
   if (categoryId) {
-    url.searchParams.append('category', categoryId);
+    endpoint += `?category=${categoryId}`;
   }
-  url.searchParams.append('time', new Date().getTime());
-  return await api(url);
+  return apiClient.get(endpoint);
 };
 
-const getProductById = async (id) => {
-  let url = new URL(`${API_URL}${id}`);
-  url.searchParams.append('time', new Date().getTime());
-  return await api(url);
+const getProductById = (id) => {
+  return apiClient.get(`/products/${id}`);
 };
 
 export default {

@@ -1,18 +1,16 @@
 
-import api from './api';
+import { apiClient } from '../config/api';
 
-const API_URL = 'https://3czzqk3l-5000.use2.devtunnels.ms/api/home';
-
-const getHeroBanners = async () => {
-  return await api(`${API_URL}/hero-banners`);
+const getHeroBanners = () => {
+  return apiClient.get('/home/hero-banners');
 };
 
-const getFeaturedCollections = async () => {
-  return await api(`${API_URL}/featured-collections`);
+const getFeaturedCollections = () => {
+  return apiClient.get('/home/featured-collections');
 };
 
-const getShippingInfo = async () => {
-  return await api(`${API_URL}/shipping-info`);
+const getShippingInfo = () => {
+  return apiClient.get('/home/shipping-info');
 };
 
 export default {

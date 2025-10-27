@@ -21,13 +21,10 @@
         <i class="fas fa-image text-gray-300 text-3xl"></i>
       </div>
 
-      <!-- Favorite Button -->
-      <button
-        class="favorite-btn absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 hover:bg-white"
-        @click.stop="toggleFavorite"
-      >
-        <i :class="['fas fa-heart text-base', isFavorite ? 'text-red-500' : 'text-gray-500']"></i>
-      </button>
+      <!-- Wishlist Button -->
+      <div class="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <WishlistButton :product-id="product._id" />
+      </div>
 
       <!-- Quick Add Button for Mobile -->
       <button
@@ -123,6 +120,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCart } from '../composables/useCart'
+import WishlistButton from './WishlistButton.vue';
 
 const props = defineProps({
   product: {
@@ -139,11 +137,10 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['favoriteToggled', 'addedToCart', 'showPeek', 'hidePeek'])
+const emit = defineEmits(['addedToCart', 'showPeek', 'hidePeek'])
 
 const router = useRouter()
 const isAdding = ref(false)
-const isFavorite = ref(false)
 const wasLongPress = ref(false)
 
 // Use cart composable for better state management
@@ -260,15 +257,6 @@ const handleAddToCart = async () => {
     showErrorMessage('Failed to add item to cart. Please try again.')
   } finally {
     isAdding.value = false
-  }
-}
-
-const toggleFavorite = () => {
-  isFavorite.value = !isFavorite.value
-  emit('favoriteToggled', { product: props.product, isFavorite: isFavorite.value })
-
-  if (navigator.vibrate) {
-    navigator.vibrate(30)
   }
 }
 

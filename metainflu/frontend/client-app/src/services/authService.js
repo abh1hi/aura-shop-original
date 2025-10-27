@@ -1,13 +1,8 @@
 
-import api from './api';
-
-const API_URL = 'https://3czzqk3l-5000.use2.devtunnels.ms/api/auth/';
+import { apiClient } from '../config/api';
 
 const register = async (userData) => {
-  const data = await api(API_URL + 'register', {
-    method: 'POST',
-    body: JSON.stringify(userData),
-  });
+  const data = await apiClient.post('/auth/register', userData);
   if (data.token) {
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify({
@@ -21,10 +16,7 @@ const register = async (userData) => {
 };
 
 const login = async (userData) => {
-  const data = await api(API_URL + 'login', {
-    method: 'POST',
-    body: JSON.stringify(userData),
-  });
+  const data = await apiClient.post('/auth/login', userData);
   if (data.token) {
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify({

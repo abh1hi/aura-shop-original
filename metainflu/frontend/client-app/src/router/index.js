@@ -17,6 +17,9 @@ import LiveChat from '../pages/LiveChat.vue';
 import Shop from '../pages/Shop.vue';
 import ProductDetail from '../pages/ProductDetail.vue';
 import BrandPage from '../pages/BrandPage.vue';
+import WishlistPage from '../pages/WishlistPage.vue';
+import AddressManager from '../pages/AddressManager.vue';
+import AccountHome from '../pages/AccountHome.vue';
 
 
 const routes = [
@@ -74,8 +77,18 @@ const routes = [
   },
   {
     path: '/account',
-    name: 'Account',
     component: Account,
+    meta: { requiresAuth: true },
+    children: [
+      { path: '', name: 'AccountHome', component: AccountHome },
+      { path: 'addresses', name: 'AccountAddresses', component: AddressManager },
+      // other account children routes can go here
+    ]
+  },
+  {
+    path: '/wishlist',
+    name: 'Wishlist',
+    component: WishlistPage,
     meta: { requiresAuth: true },
   },
   {

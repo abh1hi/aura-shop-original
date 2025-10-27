@@ -1,36 +1,24 @@
 
-import api from './api';
+import { apiClient } from '../config/api';
 
-const API_URL = 'https://3czzqk3l-5000.use2.devtunnels.ms/api/cart';
-
-const getCart = async () => {
-  return await api(API_URL);
+const getCart = () => {
+  return apiClient.get('/cart');
 };
 
-const addToCart = async (itemData) => {
-  return await api(API_URL, {
-    method: 'POST',
-    body: JSON.stringify(itemData),
-  });
+const addToCart = (itemData) => {
+  return apiClient.post('/cart', itemData);
 };
 
-const removeFromCart = async (itemId) => {
-  return await api(`${API_URL}/${itemId}`, {
-    method: 'DELETE',
-  });
+const removeFromCart = (itemId) => {
+  return apiClient.delete(`/cart/${itemId}`);
 };
 
-const updateCartItem = async (itemId, quantity) => {
-  return await api(`${API_URL}/${itemId}`, {
-    method: 'PUT',
-    body: JSON.stringify({ quantity }),
-  });
+const updateCartItem = (itemId, quantity) => {
+  return apiClient.put(`/cart/${itemId}`, { quantity });
 };
 
-const clearCart = async () => {
-  return await api(API_URL, {
-    method: 'DELETE',
-  });
+const clearCart = () => {
+  return apiClient.delete('/cart');
 };
 
 export default {

@@ -3,11 +3,11 @@
     <PageHeader title="Checkout" />
 
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div v-if="isLoading" class="text-center py-20">
+      <div v-if="isLoading || addressState.loading" class="text-center py-20">
         <p class="text-lg text-gray-500">Preparing checkout...</p>
       </div>
-      <div v-else-if="error" class="text-center py-20">
-        <p class="text-xl text-red-500">Error: {{ error }}</p>
+      <div v-else-if="error || addressState.error" class="text-center py-20">
+        <p class="text-xl text-red-500">Error: {{ error || addressState.error }}</p>
         <router-link to="/cart" class="cta-button mt-4">Return to Cart</router-link>
       </div>
       <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
@@ -17,30 +17,19 @@
             <!-- Shipping Information -->
             <div class="form-section">
               <h2 class="section-title">Shipping Information</h2>
-              <form @submit.prevent class="space-y-6">
-                <div class="form-group">
-                  <label for="name">Full Name</label>
-                  <input type="text" id="name" required v-model="formData.shippingAddress.fullName" class="form-input">
+              <div class="space-y-4">
+                <div v-for="address in addressState.addresses" :key="address._id" @click="selectedAddressId = address._id" class="border rounded-lg p-4 cursor-pointer flex items-start space-x-4" :class="{ 'border-indigo-500 ring-2 ring-indigo-200': selectedAddressId === address._id }">
+                  <input type="radio" :id="`address-${address._id}`" :value="address._id" v-model="selectedAddressId" class="mt-1 h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                  <label :for="`address-${address._id}`" class="flex-1">
+                    <div class="flex justify-between">
+                      <p class="font-semibold">{{ address.fullName }}</p>
+                      <span v-if="address.isDefault" class="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Default</span>
+                    </div>
+                    <p>{{ address.streetAddress }}, {{ address.city }}, {{ address.state }} {{ address.postalCode }}</p>
+                  </label>
                 </div>
-                <div class="form-group">
-                  <label for="address">Address</label>
-                  <input type="text" id="address" required v-model="formData.shippingAddress.address" class="form-input">
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div class="form-group">
-                    <label for="city">City</label>
-                    <input type="text" id="city" required v-model="formData.shippingAddress.city" class="form-input">
-                  </div>
-                  <div class="form-group">
-                    <label for="postalCode">Postal Code</label>
-                    <input type="text" id="postalCode" required v-model="formData.shippingAddress.postalCode" class="form-input">
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="country">Country</label>
-                  <input type="text" id="country" required v-model="formData.shippingAddress.country" class="form-input">
-                </div>
-              </form>
+                <button @click="openAddModal" class="w-full text-left p-4 border-2 border-dashed rounded-lg hover:bg-gray-50">+ Add New Address</button>
+              </div>
             </div>
 
             <!-- Payment Details -->
@@ -58,7 +47,6 @@
                   <label for="card-number">Card Number</label>
                   <input type="text" id="card-number" required v-model="formData.paymentDetails.cardNumber" class="form-input" placeholder="**** **** **** 1234">
                 </div>
-                <!-- More payment fields can be added here -->
               </form>
             </div>
           </div>
@@ -70,14 +58,7 @@
           <div class="space-y-4">
             <div v-for="item in cartItems" :key="item._id || (item.product && item.product._id)" class="flex justify-between items-center text-sm">
               <span class="text-gray-600">
-                {{ item.product?.name }}
-                <template v-if="item.variant?.attributes && item.variant.attributes.length">
-                  —
-                  <span v-for="(attr, idx) in item.variant.attributes" :key="idx">
-                    {{ attr.name }}: {{ attr.value }}<span v-if="idx < item.variant.attributes.length - 1">, </span>
-                  </span>
-                </template>
-                (x{{ item.quantity }})
+                {{ item.product?.name }} (x{{ item.quantity }})
               </span>
               <span class="font-medium">
                 ${{ linePrice(item).toFixed(2) }}
@@ -100,22 +81,36 @@
               <span>${{ cartTotal.total.toFixed(2) }}</span>
             </div>
           </div>
-          <button @click="placeOrder" :disabled="isPlacingOrder" class="place-order-btn">
+          <button @click="placeOrder" :disabled="isPlacingOrder || !selectedAddressId" class="place-order-btn">
             {{ isPlacingOrder ? 'Processing...' : 'Place Order' }}
           </button>
           <div v-if="orderError" class="mt-4 text-red-500 font-semibold text-center">{{ orderError }}</div>
         </aside>
       </div>
     </div>
+
+    <!-- Modal for Address Form -->
+    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
+        <h3 class="text-xl font-bold mb-4">Add New Address</h3>
+        <AddressForm 
+          :address="{}"
+          @save="handleSaveAddress"
+          @cancel="closeModal"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import cartService from '../services/cartService';
 import orderService from '../services/orderService';
+import { useAddress } from '../composables/useAddress';
 import { useRouter } from 'vue-router';
 import PageHeader from '../components/PageHeader.vue';
+import AddressForm from '../components/AddressForm.vue';
 
 const router = useRouter();
 
@@ -126,28 +121,30 @@ const error = ref(null);
 const isPlacingOrder = ref(false);
 const orderError = ref(null);
 
+const { addresses: addressState, fetchAddresses, saveAddress } = useAddress();
+const selectedAddressId = ref(null);
+const showModal = ref(false);
+
 const formData = ref({
-    shippingAddress: {
-        fullName: 'Jane Doe',
-        address: '123 Main St',
-        city: 'New York',
-        postalCode: '10001',
-        country: 'USA',
-    },
+    shippingAddress: {},
     paymentDetails: {
         paymentMethod: 'Card',
         cardNumber: ''
     }
 });
 
+watch(selectedAddressId, (newId) => {
+  if (newId) {
+    formData.value.shippingAddress = addressState.value.find(a => a._id === newId);
+  }
+});
+
 const fetchCart = async () => {
     isLoading.value = true;
     try {
         const data = await cartService.getCart();
-        // Ensure cart items preserve variant and product pricing
         cartItems.value = (data.items || []).map(item => ({
           ...item,
-          // Coerce numeric price for safety
           product: {
             ...(item.product || {}),
             price: Number(item.product?.price ?? 0)
@@ -162,13 +159,11 @@ const fetchCart = async () => {
         }
     } catch (err) {
         error.value = 'Failed to load cart: ' + err.message;
-        
     } finally {
         isLoading.value = false;
     }
 };
 
-// Compute line price preferring variant price when present
 const unitPrice = (item) => {
   if (item?.variant && item.variant.price != null) return Number(item.variant.price) || 0;
   if (item?.product && item.product.price != null) return Number(item.product.price) || 0;
@@ -188,6 +183,10 @@ const cartTotal = computed(() => {
 const placeOrder = async () => {
     if (cartItems.value.length === 0) {
         orderError.value = "Cannot place order: Cart is empty.";
+        return;
+    }
+    if (!selectedAddressId.value) {
+        orderError.value = "Please select a shipping address.";
         return;
     }
     
@@ -216,14 +215,35 @@ const placeOrder = async () => {
         
     } catch (err) {
         orderError.value = 'Failed to place order: ' + (err.message || 'Unknown error');
-        
     } finally {
         isPlacingOrder.value = false;
     }
 };
 
-onMounted(() => {
-    fetchCart();
+const openAddModal = () => {
+  showModal.value = true;
+};
+
+const closeModal = () => {
+  showModal.value = false;
+};
+
+const handleSaveAddress = async (addressData) => {
+  await saveAddress(addressData);
+  const defaultAddress = addressState.value.find(a => a.isDefault) || addressState.value[0];
+  if (defaultAddress) {
+    selectedAddressId.value = defaultAddress._id;
+  }
+  closeModal();
+};
+
+onMounted(async () => {
+    await fetchCart();
+    await fetchAddresses();
+    const defaultAddress = addressState.value.find(a => a.isDefault) || (addressState.value.length > 0 ? addressState.value[0] : null);
+    if (defaultAddress) {
+      selectedAddressId.value = defaultAddress._id;
+    }
 });
 </script>
 

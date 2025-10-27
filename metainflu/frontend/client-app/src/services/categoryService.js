@@ -1,12 +1,8 @@
 
-import api from './api';
+import { apiClient } from '../config/api';
 
-const API_URL = 'https://3czzqk3l-5000.use2.devtunnels.ms/api/categories/';
-
-const getCategories = async () => {
-  let url = new URL(API_URL);
-  url.searchParams.append('time', new Date().getTime());
-  return await api(url);
+const getCategories = () => {
+  return apiClient.get('/categories');
 };
 
 export default {
