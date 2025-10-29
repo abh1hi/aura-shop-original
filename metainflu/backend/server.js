@@ -2,7 +2,7 @@
   File: metainflu/backend/server.js
   Purpose: The main entry point for the Node.js Express backend.
   It sets up middleware, connects to the database, and registers all API routes,
-  including the new vendor routes.
+  including the new vendor routes and dashboard routes.
 */
 const express = require('express');
 const dotenv = require('dotenv');
@@ -23,6 +23,7 @@ const brandRoutes = require('./routes/brandRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const geocodeRoutes = require('./routes/geocodeRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes'); // Import dashboard routes
 
 const { errorHandler } = require('./middleware/errorMiddleware');
 const { protect } = require('./middleware/authMiddleware');
@@ -123,6 +124,7 @@ app.use('/api/brands', brandRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/geocode', geocodeRoutes);
+app.use('/api', dashboardRoutes); // Add dashboard routes for backward compatibility
 
 // Test protected route
 app.get('/api/protected', protect, (req, res) => {
@@ -151,7 +153,8 @@ app.get('/api/info', (req, res) => {
       cart: '/api/cart',
       admin: '/api/admin',
       vendor: '/api/vendor',
-      home: '/api/home'
+      home: '/api/home',
+      dashboard: '/api/dashboard'
     },
     cors: {
       enabled: true,
@@ -169,4 +172,7 @@ app.listen(port, () => {
   console.log(`🚀 Server running on port ${port}`);
   console.log(`📱 Mobile apps can connect via: http://YOUR_IP:${port}`);
   console.log(`🌐 Web apps can connect via: http://localhost:${port}`);
+  console.log('📊 Dashboard endpoints available at:');
+  console.log(`   - /api/dashboard (legacy support)`);
+  console.log(`   - /api/admin/dashboard (preferred)`);
 });
