@@ -10,6 +10,7 @@
         <nav class="mt-4">
           <router-link to="/dashboard" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50"><span>Dashboard</span></router-link>
           <router-link to="/products" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50"><span>Products</span></router-link>
+          <router-link to="/categories" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50"><span>Categories</span></router-link>
           <router-link to="/orders" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50"><span>Orders</span></router-link>
           <router-link to="/customers" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50"><span>Customers</span></router-link>
           <router-link to="/content" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50"><span>Content</span></router-link>
