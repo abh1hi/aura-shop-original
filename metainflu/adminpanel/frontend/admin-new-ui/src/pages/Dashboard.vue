@@ -15,9 +15,9 @@
     <div v-if="stats && !loading">
       <!-- Stat Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="text-sm font-medium text-gray-500">Total Revenue</h3><p class="mt-2 text-3xl font-semibold text-gray-900">${{ (stats.totalRevenue || 0).toFixed(2) }}</p></div>
-        <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="text-sm font-medium text-gray-500">Total Orders</h3><p class="mt-2 text-3xl font-semibold text-gray-900">{{ stats.totalOrders }}</p></div>
-        <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="text-sm font-medium text-gray-500">Total Customers</h3><p class="mt-2 text-3xl font-semibold text-gray-900">{{ stats.totalCustomers }}</p></div>
+        <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="text-sm font-medium text-gray-500">Total Revenue</h3><p class="mt-2 text-3xl font-semibold text-gray-900">${{ (stats.summary?.totalRevenue || 0).toFixed(2) }}</p></div>
+        <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="text-sm font-medium text-gray-500">Total Orders</h3><p class="mt-2 text-3xl font-semibold text-gray-900">{{ stats.summary?.totalOrders || 0 }}</p></div>
+        <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="text-sm font-medium text-gray-500">Total Customers</h3><p class="mt-2 text-3xl font-semibold text-gray-900">{{ stats.summary?.totalCustomers || 0 }}</p></div>
       </div>
 
       <!-- Tables Section -->
@@ -29,6 +29,9 @@
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th></tr></thead>
               <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-if="!stats.recentOrders?.length">
+                  <td colspan="3" class="px-6 py-4 text-center text-gray-500">No recent orders</td>
+                </tr>
                 <tr v-for="order in stats.recentOrders" :key="order._id">
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ order.user ? order.user.name : 'N/A' }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${{ (order.totalPrice || 0).toFixed(2) }}</td>
@@ -46,6 +49,9 @@
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity Sold</th></tr></thead>
               <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-if="!stats.topSellingProducts?.length">
+                  <td colspan="2" class="px-6 py-4 text-center text-gray-500">No product sales data</td>
+                </tr>
                 <tr v-for="product in stats.topSellingProducts" :key="product._id">
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ product.name }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.totalQuantitySold }}</td>
@@ -70,9 +76,11 @@ const error = ref(null);
 const fetchDashboardData = async () => {
   try {
     loading.value = true;
-    const response = await apiClient.get('/dashboard');
+    // Use admin endpoint for dashboard data
+    const response = await apiClient.admin.get('/dashboard');
     stats.value = response.data;
   } catch (err) {
+    console.error('Dashboard API Error:', err);
     error.value = err.response?.data?.message || err.message || 'An unknown error occurred.';
   } finally {
     loading.value = false;
