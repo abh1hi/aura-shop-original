@@ -1,20 +1,20 @@
 import api from './apiClient';
 
-const getMyBrand = () => {
-  return api.get('/brands/my-brand');
-};
+// Get current vendor's brand (if applicable)
+const getMyBrand = () => api.get('/brands/my-brand');
 
-const createBrand = (brandData) => {
-  return api.post('/brands', brandData);
-};
+// List all brands (public endpoint assumed)
+const getBrands = () => api.get('/brands');
 
-const updateBrand = (id, brandData) => {
-  return api.put(`/brands/${id}`, brandData);
-};
+// Create a brand (admin/vendor as permitted)
+const createBrand = (brandData) => api.post('/brands', brandData);
+
+// Update a brand
+const updateBrand = (id, brandData) => api.put(`/brands/${id}`, brandData);
 
 export default {
   getMyBrand,
+  getBrands,
   createBrand,
   updateBrand,
 };
-
