@@ -20,6 +20,15 @@
           <strong>Error:</strong> {{ errorMessage }}
         </div>
         
+        <!-- Debug Information (Development Only) -->
+        <div v-if="debugInfo && isDevelopment" class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
+          <h4 class="text-blue-800 font-semibold mb-2">🐛 Debug Information</h4>
+          <details class="text-sm">
+            <summary class="cursor-pointer text-blue-700 hover:text-blue-900">Click to view debug details</summary>
+            <pre class="mt-2 text-xs bg-blue-100 p-2 rounded overflow-auto">{{ debugInfo }}</pre>
+          </details>
+        </div>
+        
         <!-- Validation Errors -->
         <div v-if="validationErrors.length > 0" class="bg-red-50 border border-red-200 p-4 rounded-lg mb-6">
           <h4 class="text-red-800 font-semibold mb-2">Please fix the following errors:</h4>
@@ -240,6 +249,36 @@
             </div>
           </div>
 
+          <!-- Development Tools -->
+          <div v-if="isDevelopment" class="border-t pt-6">
+            <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+              <h4 class="text-yellow-800 font-semibold mb-2">🛠️ Development Tools</h4>
+              <div class="space-x-2">
+                <button 
+                  type="button" 
+                  @click="generateTestData" 
+                  class="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"
+                >
+                  Fill Test Data
+                </button>
+                <button 
+                  type="button" 
+                  @click="validateFormDebug" 
+                  class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                >
+                  Debug Validation
+                </button>
+                <button 
+                  type="button" 
+                  @click="showProductData" 
+                  class="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600"
+                >
+                  Show Data
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- Submit Button -->
           <div class="flex justify-end pt-4">
             <button 
@@ -262,8 +301,12 @@ import { useRouter } from 'vue-router';
 import vendorService from '../services/vendorService';
 import categoryService from '../services/categoryService';
 import { productValidation, errorUtils } from '../utils/validation';
+import { debugLog, validateProductStructure, compareProductData, generateTestProduct, analyzeValidationErrors } from '../utils/debug';
 
 const router = useRouter();
+
+// Environment check
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 // Form data
 const newProduct = ref({
@@ -288,6 +331,7 @@ const isSaving = ref(false);
 const successMessage = ref('');
 const errorMessage = ref('');
 const validationErrors = ref([]);
+const debugInfo = ref('');
 
 // Computed properties
 const getFieldError = computed(() => {
@@ -301,7 +345,6 @@ const validateField = (fieldName) => {
   // Remove existing errors for this field
   validationErrors.value = validationErrors.value.filter(error => error.field !== fieldName);
   
-  // Validate specific field
   let errors = [];
   
   if (fieldName === 'name') {
@@ -309,7 +352,6 @@ const validateField = (fieldName) => {
   } else if (fieldName === 'description') {
     errors = productValidation.validateText(newProduct.value.description, 'description', 10, 5000);
   } else if (fieldName.startsWith('variants[')) {
-    // Extract variant index and field from fieldName like "variants[0].sku"
     const match = fieldName.match(/variants\[(\d+)\]\.(\w+)/);
     if (match) {
       const variantIndex = parseInt(match[1]);
@@ -331,12 +373,29 @@ const validateField = (fieldName) => {
 
 const validateForm = () => {
   validationErrors.value = [];
-  
-  // Validate entire product
   const errors = productValidation.validateProduct(newProduct.value);
   validationErrors.value = errors;
-  
   return errors.length === 0;
+};
+
+// Development helper methods
+const generateTestData = () => {
+  const testProduct = generateTestProduct();
+  newProduct.value = { ...testProduct };
+  tagsInput.value = testProduct.tags.join(', ');
+  debugLog('TestData', 'Generated test product data', testProduct);
+};
+
+const validateFormDebug = () => {
+  const validation = validateProductStructure(newProduct.value);
+  debugInfo.value = JSON.stringify(validation, null, 2);
+  analyzeValidationErrors(validationErrors.value);
+  debugLog('FormValidation', 'Validation results', validation);
+};
+
+const showProductData = () => {
+  debugInfo.value = JSON.stringify(newProduct.value, null, 2);
+  debugLog('ProductData', 'Current product data', newProduct.value);
 };
 
 const addVariant = () => {
@@ -352,7 +411,6 @@ const addVariant = () => {
 const removeVariant = (index) => {
   if (newProduct.value.variants.length > 1) {
     newProduct.value.variants.splice(index, 1);
-    // Remove validation errors for removed variant
     validationErrors.value = validationErrors.value.filter(error => 
       !error.field.startsWith(`variants[${index}]`)
     );
@@ -370,7 +428,6 @@ const addImage = () => {
 
 const removeImage = (index) => {
   newProduct.value.images.splice(index, 1);
-  // Update positions
   newProduct.value.images.forEach((img, i) => {
     img.position = i;
     img.isPrimary = i === 0;
@@ -387,6 +444,7 @@ const updateTags = () => {
 const fetchCategories = async () => {
   try {
     categories.value = await categoryService.getCategories();
+    debugLog('Categories', 'Fetched categories', categories.value);
   } catch (err) {
     console.error('Error fetching categories:', err);
     errorMessage.value = 'Could not load categories.';
@@ -394,13 +452,16 @@ const fetchCategories = async () => {
 };
 
 const saveProduct = async () => {
-  // Clear previous messages
   errorMessage.value = '';
   successMessage.value = '';
+  debugInfo.value = '';
   
-  // Validate form
+  debugLog('ProductSave', 'Starting product save process');
+  
+  // Frontend validation
   if (!validateForm()) {
     errorMessage.value = 'Please fix the validation errors before submitting.';
+    analyzeValidationErrors(validationErrors.value);
     return;
   }
   
@@ -421,7 +482,9 @@ const saveProduct = async () => {
       description: newProduct.value.description.trim(),
       variants: newProduct.value.variants.map(variant => ({
         ...variant,
-        sku: variant.sku.trim()
+        sku: variant.sku.trim(),
+        price: parseFloat(variant.price) || 0,
+        stock: parseInt(variant.stock) || 0
       })),
       images: newProduct.value.images.filter(img => img.url.trim()),
       tags: newProduct.value.tags,
@@ -433,7 +496,19 @@ const saveProduct = async () => {
         : undefined
     };
     
+    debugLog('ProductPayload', 'Prepared payload for API', productPayload);
+    
+    // Validation check before sending
+    const structureValidation = validateProductStructure(productPayload);
+    if (!structureValidation.isValid) {
+      debugInfo.value = JSON.stringify(structureValidation, null, 2);
+      errorMessage.value = `Data structure validation failed: ${structureValidation.issues.join(', ')}`;
+      return;
+    }
+    
     const createdProduct = await vendorService.createProduct(productPayload);
+    
+    debugLog('ProductCreated', 'Product created successfully', createdProduct);
     
     successMessage.value = `Product "${createdProduct.name}" created successfully!`;
     if (newProduct.value.category === 'new_category') {
@@ -458,6 +533,7 @@ const saveProduct = async () => {
     newCategoryName.value = '';
     tagsInput.value = '';
     validationErrors.value = [];
+    debugInfo.value = '';
     
     // Redirect after delay
     setTimeout(() => {
@@ -465,8 +541,23 @@ const saveProduct = async () => {
     }, 2000);
     
   } catch (err) {
+    debugLog('ProductSaveError', 'Error saving product', {
+      error: err.message,
+      stack: err.stack,
+      productData: newProduct.value
+    });
+    
     console.error('Error saving product:', err);
     errorMessage.value = err.message || 'Failed to save product. Please try again.';
+    
+    // Show debug info in development
+    if (isDevelopment) {
+      debugInfo.value = JSON.stringify({
+        error: err.message,
+        productData: newProduct.value,
+        timestamp: new Date().toISOString()
+      }, null, 2);
+    }
   } finally {
     isSaving.value = false;
   }
@@ -474,12 +565,12 @@ const saveProduct = async () => {
 
 // Initialize
 onMounted(() => {
+  debugLog('Component', 'AddProduct component mounted');
   fetchCategories();
 });
 </script>
 
 <style scoped>
-/* Custom styles if needed */
 .card {
   @apply bg-white rounded-lg border border-gray-200;
 }
