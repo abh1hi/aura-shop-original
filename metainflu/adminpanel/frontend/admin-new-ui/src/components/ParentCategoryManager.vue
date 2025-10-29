@@ -201,7 +201,7 @@ const formatDate = (dateString) => {
 const fetchCategories = async () => {
   loading.value = true;
   try {
-    const response = await apiClient.get('/parent-categories');
+    const response = await apiClient.admin.get('/parent-categories');
     categories.value = response.data;
   } catch (error) {
     console.error('Error fetching parent categories:', error);
@@ -226,11 +226,11 @@ const saveCategory = async () => {
   try {
     if (editingCategory.value) {
       // Update existing category
-      await apiClient.put(`/parent-categories/${editingCategory.value._id}`, form.value);
+      await apiClient.admin.put(`/parent-categories/${editingCategory.value._id}`, form.value);
       emit('alert', 'success', 'Parent category updated successfully');
     } else {
       // Create new category
-      await apiClient.post('/parent-categories', form.value);
+      await apiClient.admin.post('/parent-categories', form.value);
       emit('alert', 'success', 'Parent category created successfully');
     }
     
@@ -252,7 +252,7 @@ const deleteCategory = async (category) => {
   }
   
   try {
-    await apiClient.delete(`/parent-categories/${category._id}`);
+    await apiClient.admin.delete(`/parent-categories/${category._id}`);
     emit('alert', 'success', 'Parent category deleted successfully');
     await fetchCategories();
     emit('refresh');
