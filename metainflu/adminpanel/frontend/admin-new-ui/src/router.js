@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard.vue';
 import Products from './pages/Products.vue';
 import Orders from './pages/Orders.vue';
 import Customers from './pages/Customers.vue';
+import Categories from './pages/Categories.vue'; // Import Categories page
 import Content from './pages/Content.vue';
 import Analytics from './pages/Analytics.vue';
 import Promotions from './pages/Promotions.vue';
@@ -26,6 +27,7 @@ const routes = [
       { path: 'product/edit/:id', component: ProductEdit }, // Edit route
       { path: 'orders', component: Orders },
       { path: 'customers', component: Customers },
+      { path: 'categories', component: Categories }, // Add Categories route
       { path: 'content', component: Content },
       { path: 'analytics', component: Analytics },
       { path: 'promotions', component: Promotions },
