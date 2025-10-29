@@ -62,8 +62,21 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import apiClient from '../services/api';
 
+// Vue Router
+const route = useRoute();
+const router = useRouter();
+
 // Data Refs
-const product = ref({ name: '', brand: '', description: '', parentCategory: null, category: null, subCategory: null, variants: [], images: [] });
+const product = ref({ 
+  name: '', 
+  brand: '', 
+  description: '', 
+  parentCategory: null, 
+  category: null, 
+  subCategory: null, 
+  variants: [], 
+  images: [] 
+});
 const parentCategories = ref([]);
 const allCategories = ref([]);
 const allSubCategories = ref([]);
@@ -85,23 +98,52 @@ const filteredSubCategories = computed(() => {
 });
 
 // Methods
-const fetchProduct = async () => { /* ... */ };
+const fetchProduct = async () => {
+  try {
+    const response = await apiClient.get(`/products/${productId.value}`);
+    product.value = response.data;
+  } catch (err) {
+    error.value = 'Failed to load product data.';
+    console.error('Error fetching product:', err);
+  }
+};
+
 const fetchCategories = async () => {
   try {
     const [pCatRes, catRes, subCatRes] = await Promise.all([
-      apiClient.get('/../parent-categories'),
-      apiClient.get('/../categories'),
-      apiClient.get('/../subcategories'),
+      apiClient.get('/parent-categories'),
+      apiClient.get('/categories'),
+      apiClient.get('/subcategories'),
     ]);
     parentCategories.value = pCatRes.data;
     allCategories.value = catRes.data;
     allSubCategories.value = subCatRes.data;
   } catch (err) {
     error.value = 'Failed to load category data.';
+    console.error('Error fetching categories:', err);
   }
 };
 
-const handleSubmit = async () => { /* ... */ };
+const handleSubmit = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+    
+    if (isEditMode.value) {
+      await apiClient.put(`/products/${productId.value}`, product.value);
+    } else {
+      await apiClient.post('/products', product.value);
+    }
+    
+    // Navigate back to products list
+    router.push('/products');
+  } catch (err) {
+    error.value = 'Failed to save product.';
+    console.error('Error saving product:', err);
+  } finally {
+    loading.value = false;
+  }
+};
 
 // Lifecycle Hook
 onMounted(async () => {
