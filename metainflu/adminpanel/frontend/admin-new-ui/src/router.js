@@ -11,6 +11,7 @@ import Orders from './pages/Orders.vue';
 import Customers from './pages/Customers.vue';
 import Categories from './pages/Categories.vue';
 import Content from './pages/Content.vue';
+import ContentEnhanced from './pages/ContentEnhanced.vue';
 import Analytics from './pages/Analytics.vue';
 import Promotions from './pages/Promotions.vue';
 import ProductEdit from './pages/ProductEdit.vue';
@@ -54,7 +55,8 @@ const routes = [
       { path: 'user-management', component: UserManagement, meta: { title: 'User Management' } },
       
       // Content Management
-      { path: 'content', component: Content, meta: { title: 'Content' } },
+      { path: 'content', component: ContentEnhanced, meta: { title: 'Content Management' } },
+      { path: 'content-basic', component: Content, meta: { title: 'Basic Content' } },
       
       // Analytics Routes
       { path: 'analytics', component: Analytics, meta: { title: 'Analytics' } },

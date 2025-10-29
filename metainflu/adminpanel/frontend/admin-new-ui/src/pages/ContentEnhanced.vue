@@ -8,10 +8,17 @@
           <p class="text-sm text-gray-600 mt-1">Manage hero banners and featured collections with preview and scheduling</p>
         </div>
         <div class="flex items-center space-x-4">
-          <div class="text-sm text-gray-500">
-            {{ activeTab === 'banners' ? banners.length : collections.length }} items
+          <div class="flex items-center space-x-2 text-sm text-gray-500">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>{{ contentStats.banners || 0 }} banners, {{ contentStats.collections || 0 }} collections</span>
           </div>
           <button @click="refreshContent" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm hover:bg-indigo-700 disabled:opacity-50">
+            <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
             {{ loading ? 'Refreshing...' : 'Refresh' }}
           </button>
         </div>
@@ -46,18 +53,6 @@
             <span>Featured Collections</span>
             <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">{{ collections.length }}</span>
           </button>
-          <button 
-            @click="activeTab = 'preview'"
-            :class="[
-              'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2',
-              activeTab === 'preview' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            ]">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-            </svg>
-            <span>Live Preview</span>
-          </button>
         </nav>
       </div>
 
@@ -85,6 +80,26 @@
             </button>
           </div>
 
+          <!-- Banner Status Overview -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-green-50 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-green-600">{{ getBannersBy('published').length }}</div>
+              <div class="text-sm text-gray-600">Published</div>
+            </div>
+            <div class="bg-yellow-50 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-yellow-600">{{ getBannersBy('draft').length }}</div>
+              <div class="text-sm text-gray-600">Drafts</div>
+            </div>
+            <div class="bg-blue-50 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-blue-600">{{ getBannersBy('scheduled').length }}</div>
+              <div class="text-sm text-gray-600">Scheduled</div>
+            </div>
+            <div class="bg-red-50 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-red-600">{{ getBannersBy('expired').length }}</div>
+              <div class="text-sm text-gray-600">Expired</div>
+            </div>
+          </div>
+
           <!-- Banners Grid -->
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div v-if="loading" class="col-span-full flex justify-center py-12">
@@ -100,46 +115,69 @@
               <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
               </svg>
-              <p>No banners found</p>
+              <p class="text-lg font-medium mb-2">No banners found</p>
+              <button @click="openBannerForm()" class="text-indigo-600 hover:text-indigo-500">Create your first banner</button>
             </div>
-            <div v-for="banner in filteredBanners" :key="banner._id" class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+            
+            <!-- Banner Cards -->
+            <div v-for="banner in filteredBanners" :key="banner._id" class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
               <!-- Banner Preview Image -->
-              <div class="h-40 bg-gray-100 overflow-hidden">
+              <div class="relative h-40 bg-gray-100 overflow-hidden">
                 <img v-if="banner.imageUrl" :src="banner.imageUrl" :alt="banner.title" class="w-full h-full object-cover" @error="handleImageError">
-                <div v-else class="w-full h-full flex items-center justify-center bg-gray-200">
-                  <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                  </svg>
+                <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-r from-gray-300 to-gray-400">
+                  <span class="text-white text-lg font-bold">{{ banner.title || 'No Title' }}</span>
+                </div>
+                
+                <!-- Status Badge -->
+                <div class="absolute top-2 right-2">
+                  <span :class="getBannerStatusClass(banner.status)" class="px-2 py-1 text-xs rounded-full font-medium">
+                    {{ getBannerStatusText(banner.status) }}
+                  </span>
+                </div>
+                
+                <!-- Priority Badge -->
+                <div v-if="banner.priority === 'high'" class="absolute top-2 left-2">
+                  <span class="bg-red-500 text-white px-2 py-1 text-xs rounded-full font-medium">
+                    HIGH PRIORITY
+                  </span>
                 </div>
               </div>
               
               <!-- Banner Info -->
               <div class="p-4">
                 <div class="flex items-center justify-between mb-2">
-                  <h3 class="text-lg font-semibold text-gray-900 truncate">{{ banner.title }}</h3>
-                  <span :class="getBannerStatusClass(banner.status)" class="px-2 py-1 text-xs rounded-full">
-                    {{ getBannerStatusText(banner.status) }}
-                  </span>
+                  <h3 class="text-lg font-semibold text-gray-900 truncate">{{ banner.title || 'Untitled Banner' }}</h3>
+                  <span class="text-sm text-gray-500">#{{ banner.order || 1 }}</span>
                 </div>
-                <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ banner.subtitle || banner.description }}</p>
+                <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ banner.subtitle || 'No subtitle' }}</p>
                 
                 <!-- Scheduling Info -->
-                <div v-if="banner.scheduledStart || banner.scheduledEnd" class="text-xs text-gray-500 mb-3">
-                  <div v-if="banner.scheduledStart">Start: {{ formatDateTime(banner.scheduledStart) }}</div>
-                  <div v-if="banner.scheduledEnd">End: {{ formatDateTime(banner.scheduledEnd) }}</div>
+                <div v-if="banner.scheduledStart || banner.scheduledEnd" class="text-xs text-gray-500 mb-3 bg-blue-50 p-2 rounded">
+                  <div v-if="banner.scheduledStart" class="flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Start: {{ formatDateTime(banner.scheduledStart) }}
+                  </div>
+                  <div v-if="banner.scheduledEnd" class="flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    End: {{ formatDateTime(banner.scheduledEnd) }}
+                  </div>
                 </div>
                 
                 <!-- Actions -->
                 <div class="flex items-center justify-between">
                   <div class="flex space-x-2">
-                    <button @click="previewBanner(banner)" class="text-blue-600 hover:text-blue-900 text-sm">
-                      <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button @click="previewBanner(banner)" class="text-blue-600 hover:text-blue-900 text-sm flex items-center">
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                       </svg>
                       Preview
                     </button>
-                    <button @click="openBannerForm(banner)" class="text-indigo-600 hover:text-indigo-900 text-sm">
-                      <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button @click="openBannerForm(banner)" class="text-indigo-600 hover:text-indigo-900 text-sm flex items-center">
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                       </svg>
                       Edit
@@ -149,7 +187,7 @@
                     <button @click="toggleBannerStatus(banner)" class="text-green-600 hover:text-green-900 text-sm">
                       {{ banner.status === 'published' ? 'Unpublish' : 'Publish' }}
                     </button>
-                    <button @click="deleteBanner(banner._id)" class="text-red-600 hover:text-red-900 text-sm">
+                    <button @click="deleteBanner(banner._id, banner.title)" class="text-red-600 hover:text-red-900 text-sm">
                       Delete
                     </button>
                   </div>
@@ -180,9 +218,25 @@
             </button>
           </div>
 
-          <!-- Collections Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div v-if="loading" class="col-span-full flex justify-center py-12">
+          <!-- Collection Status Overview -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-green-50 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-green-600">{{ getCollectionsBy('published').length }}</div>
+              <div class="text-sm text-gray-600">Published</div>
+            </div>
+            <div class="bg-yellow-50 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-yellow-600">{{ getCollectionsBy('draft').length }}</div>
+              <div class="text-sm text-gray-600">Drafts</div>
+            </div>
+            <div class="bg-blue-50 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-blue-600">{{ getCollectionsBy('scheduled').length }}</div>
+              <div class="text-sm text-gray-600">Scheduled</div>
+            </div>
+          </div>
+
+          <!-- Collections List -->
+          <div class="space-y-4">
+            <div v-if="loading" class="flex justify-center py-12">
               <div class="inline-flex items-center">
                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -191,144 +245,78 @@
                 Loading collections...
               </div>
             </div>
-            <div v-else-if="!filteredCollections.length" class="col-span-full text-center py-12 text-gray-500">
+            <div v-else-if="!filteredCollections.length" class="text-center py-12 text-gray-500">
               <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 7a2 2 0 002-2h10a2 2 0 002 2v2M5 7v2"></path>
               </svg>
-              <p>No collections found</p>
+              <p class="text-lg font-medium mb-2">No collections found</p>
+              <button @click="openCollectionForm()" class="text-purple-600 hover:text-purple-500">Create your first collection</button>
             </div>
-            <div v-for="collection in filteredCollections" :key="collection._id" class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-              <!-- Collection Preview -->
-              <div class="p-4 border-b border-gray-100">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="text-lg font-semibold text-gray-900 truncate">{{ collection.title }}</h3>
-                  <span :class="getCollectionStatusClass(collection.status)" class="px-2 py-1 text-xs rounded-full">
-                    {{ getCollectionStatusText(collection.status) }}
-                  </span>
-                </div>
-                <p class="text-sm text-gray-600 mb-3 line-clamp-3">{{ collection.description }}</p>
-                <div class="text-sm text-gray-500">
-                  <span class="font-medium">{{ collection.products?.length || 0 }}</span> products included
+            
+            <!-- Collection Cards -->
+            <div v-for="collection in filteredCollections" :key="collection._id" class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex-1">
+                  <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xl font-semibold text-gray-900">{{ collection.title || 'Untitled Collection' }}</h3>
+                    <span :class="getCollectionStatusClass(collection.status)" class="px-2 py-1 text-xs rounded-full font-medium">
+                      {{ getCollectionStatusText(collection.status) }}
+                    </span>
+                  </div>
+                  <p class="text-gray-600 mb-2 line-clamp-2">{{ collection.description || 'No description available' }}</p>
+                  <div class="text-sm text-gray-500">
+                    <span class="font-medium">{{ collection.products?.length || 0 }}</span> products included
+                  </div>
                 </div>
               </div>
               
-              <!-- Product Preview Grid -->
-              <div class="p-4">
-                <div class="grid grid-cols-3 gap-2 mb-4">
-                  <div v-for="product in collection.products?.slice(0, 6)" :key="product._id" class="aspect-square bg-gray-100 rounded-md overflow-hidden">
-                    <img v-if="product.images?.[0]" :src="product.images[0]" :alt="product.name" class="w-full h-full object-cover" @error="handleImageError">
+              <!-- Product Preview Thumbnails -->
+              <div v-if="collection.products?.length" class="mb-4">
+                <div class="grid grid-cols-6 gap-2">
+                  <div v-for="product in collection.products.slice(0, 6)" :key="product._id" class="aspect-square bg-gray-100 rounded-md overflow-hidden">
+                    <img v-if="product.images?.[0]" :src="product.images[0]" :alt="product.name" class="w-full h-full object-cover">
                     <div v-else class="w-full h-full flex items-center justify-center">
-                      <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                       </svg>
                     </div>
                   </div>
-                  <div v-if="collection.products?.length > 6" class="aspect-square bg-gray-100 rounded-md flex items-center justify-center">
-                    <span class="text-sm text-gray-500">+{{ collection.products.length - 6 }}</span>
-                  </div>
-                </div>
-                
-                <!-- Collection Actions -->
-                <div class="flex items-center justify-between">
-                  <div class="flex space-x-2">
-                    <button @click="previewCollection(collection)" class="text-blue-600 hover:text-blue-900 text-sm">
-                      <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                      </svg>
-                      Preview
-                    </button>
-                    <button @click="openCollectionForm(collection)" class="text-indigo-600 hover:text-indigo-900 text-sm">
-                      <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                      </svg>
-                      Edit
-                    </button>
-                  </div>
-                  <div class="flex space-x-2">
-                    <button @click="toggleCollectionStatus(collection)" class="text-green-600 hover:text-green-900 text-sm">
-                      {{ collection.status === 'published' ? 'Unpublish' : 'Publish' }}
-                    </button>
-                    <button @click="deleteCollection(collection._id)" class="text-red-600 hover:text-red-900 text-sm">
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Live Preview Tab -->
-        <div v-if="activeTab === 'preview'" class="p-6">
-          <div class="mb-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Live Website Preview</h3>
-            <div class="flex items-center space-x-4 mb-4">
-              <select v-model="previewDevice" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                <option value="desktop">Desktop View</option>
-                <option value="tablet">Tablet View</option>
-                <option value="mobile">Mobile View</option>
-              </select>
-              <button @click="refreshPreview" class="text-indigo-600 hover:text-indigo-900 text-sm">
-                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-                Refresh Preview
-              </button>
-            </div>
-          </div>
-          
-          <!-- Preview Container -->
-          <div class="border border-gray-300 rounded-lg overflow-hidden" :class="getPreviewContainerClass()">
-            <div class="bg-gray-100 p-2 border-b border-gray-200 flex items-center space-x-2">
-              <div class="flex space-x-1">
-                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-              </div>
-              <div class="text-sm text-gray-600">{{ previewUrl }}</div>
-            </div>
-            
-            <!-- Preview Content -->
-            <div class="bg-white" style="min-height: 600px;">
-              <!-- Hero Banners Preview -->
-              <div class="mb-8">
-                <h4 class="text-lg font-semibold p-4 border-b">Hero Banners (Live)</h4>
-                <div class="space-y-4 p-4">
-                  <div v-for="banner in publishedBanners" :key="banner._id" class="relative h-64 rounded-lg overflow-hidden">
-                    <img v-if="banner.imageUrl" :src="banner.imageUrl" :alt="banner.title" class="w-full h-full object-cover">
-                    <div v-else class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                      <span class="text-white text-xl font-bold">{{ banner.title }}</span>
-                    </div>
-                    <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                      <div class="text-center text-white">
-                        <h3 class="text-2xl font-bold mb-2">{{ banner.title }}</h3>
-                        <p class="text-lg mb-4">{{ banner.subtitle }}</p>
-                        <button v-if="banner.link" class="bg-white text-gray-900 px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition-colors">
-                          Learn More
-                        </button>
-                      </div>
-                    </div>
+                  <div v-if="collection.products.length > 6" class="aspect-square bg-gray-100 rounded-md flex items-center justify-center">
+                    <span class="text-xs text-gray-500 font-medium">+{{ collection.products.length - 6 }}</span>
                   </div>
                 </div>
               </div>
               
-              <!-- Featured Collections Preview -->
-              <div>
-                <h4 class="text-lg font-semibold p-4 border-b">Featured Collections (Live)</h4>
-                <div class="p-4 space-y-6">
-                  <div v-for="collection in publishedCollections" :key="collection._id" class="border rounded-lg p-4">
-                    <h5 class="text-xl font-semibold mb-2">{{ collection.title }}</h5>
-                    <p class="text-gray-600 mb-4">{{ collection.description }}</p>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div v-for="product in collection.products?.slice(0, 4)" :key="product._id" class="bg-gray-100 rounded-lg p-3">
-                        <div class="aspect-square bg-gray-200 rounded-md mb-2 overflow-hidden">
-                          <img v-if="product.images?.[0]" :src="product.images[0]" :alt="product.name" class="w-full h-full object-cover">
-                        </div>
-                        <h6 class="text-sm font-medium truncate">{{ product.name }}</h6>
-                        <p class="text-sm text-gray-500">${{ product.variants?.[0]?.price || 'N/A' }}</p>
-                      </div>
-                    </div>
-                  </div>
+              <!-- Scheduling Info -->
+              <div v-if="collection.scheduledStart || collection.scheduledEnd" class="text-xs text-gray-500 mb-4 bg-blue-50 p-3 rounded">
+                <div class="font-medium mb-1">Scheduling:</div>
+                <div v-if="collection.scheduledStart">Start: {{ formatDateTime(collection.scheduledStart) }}</div>
+                <div v-if="collection.scheduledEnd">End: {{ formatDateTime(collection.scheduledEnd) }}</div>
+              </div>
+              
+              <!-- Collection Actions -->
+              <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div class="flex space-x-3">
+                  <button @click="previewCollection(collection)" class="text-blue-600 hover:text-blue-900 text-sm flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Preview
+                  </button>
+                  <button @click="openCollectionForm(collection)" class="text-indigo-600 hover:text-indigo-900 text-sm flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    Edit
+                  </button>
+                </div>
+                <div class="flex space-x-3">
+                  <button @click="toggleCollectionStatus(collection)" class="text-green-600 hover:text-green-900 text-sm">
+                    {{ collection.status === 'published' ? 'Unpublish' : 'Publish' }}
+                  </button>
+                  <button @click="deleteCollection(collection._id, collection.title)" class="text-red-600 hover:text-red-900 text-sm">
+                    Delete
+                  </button>
                 </div>
               </div>
             </div>
@@ -376,10 +364,15 @@
 
             <!-- Scheduling Section -->
             <div v-if="bannerForm.status === 'scheduled'" class="border-t pt-4">
-              <h4 class="text-md font-medium text-gray-900 mb-3">Schedule Settings</h4>
+              <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Schedule Settings
+              </h4>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Start Date & Time</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Start Date & Time *</label>
                   <input type="datetime-local" v-model="bannerForm.scheduledStart" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                 </div>
                 <div>
@@ -405,15 +398,15 @@
               </div>
             </div>
 
-            <!-- Preview in Modal -->
-            <div v-if="bannerForm.imageUrl" class="border-t pt-4">
-              <h4 class="text-md font-medium text-gray-900 mb-3">Preview</h4>
+            <!-- Live Preview in Modal -->
+            <div v-if="bannerForm.title && bannerForm.imageUrl" class="border-t pt-4">
+              <h4 class="text-md font-medium text-gray-900 mb-3">Live Preview</h4>
               <div class="relative h-48 rounded-lg overflow-hidden border">
                 <img :src="bannerForm.imageUrl" :alt="bannerForm.title" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                   <div class="text-center text-white">
-                    <h3 class="text-xl font-bold mb-1">{{ bannerForm.title || 'Banner Title' }}</h3>
-                    <p class="text-sm">{{ bannerForm.subtitle || 'Banner subtitle' }}</p>
+                    <h3 class="text-xl font-bold mb-1">{{ bannerForm.title }}</h3>
+                    <p class="text-sm">{{ bannerForm.subtitle }}</p>
                   </div>
                 </div>
               </div>
@@ -423,13 +416,16 @@
           <!-- Modal Actions -->
           <div class="flex items-center justify-between px-4 py-3 mt-6 border-t">
             <div class="flex space-x-2">
-              <button @click="saveDraft('banner')" class="px-4 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700">
+              <button @click="saveBannerDraft" class="px-4 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700">
                 Save as Draft
+              </button>
+              <button v-if="bannerForm.id" @click="previewBanner(bannerForm)" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">
+                Preview
               </button>
             </div>
             <div class="flex space-x-2">
               <button @click="handleBannerSubmit" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700">
-                {{ bannerForm.status === 'draft' ? 'Save Draft' : bannerForm.status === 'scheduled' ? 'Schedule' : 'Publish' }}
+                {{ bannerForm.status === 'draft' ? 'Save Draft' : bannerForm.status === 'scheduled' ? 'Schedule Banner' : 'Publish Banner' }}
               </button>
               <button @click="showBannerForm = false" class="px-4 py-2 bg-gray-500 text-white text-sm rounded-md hover:bg-gray-700">
                 Cancel
@@ -469,10 +465,15 @@
 
             <!-- Scheduling Section -->
             <div v-if="collectionForm.status === 'scheduled'" class="border-t pt-4">
-              <h4 class="text-md font-medium text-gray-900 mb-3">Schedule Settings</h4>
+              <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Schedule Settings
+              </h4>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Start Date & Time</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Start Date & Time *</label>
                   <input type="datetime-local" v-model="collectionForm.scheduledStart" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                 </div>
                 <div>
@@ -484,29 +485,34 @@
             
             <!-- Product Selection -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Select Products *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Select Products * ({{ collectionForm.products.length }} selected)</label>
               <div class="border border-gray-300 rounded-md p-4 max-h-64 overflow-y-auto">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <div v-for="product in allProducts" :key="product._id" class="flex items-center space-x-2">
+                  <div v-for="product in allProducts" :key="product._id" class="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded">
                     <input type="checkbox" :value="product._id" v-model="collectionForm.products" class="form-checkbox h-4 w-4 text-indigo-600" />
-                    <span class="text-sm text-gray-700">{{ product.name }}</span>
+                    <div class="flex-1">
+                      <span class="text-sm text-gray-700">{{ product.name }}</span>
+                      <span class="text-xs text-gray-500 ml-2">${{ product.variants?.[0]?.price || 'N/A' }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <p class="text-xs text-gray-500 mt-1">{{ collectionForm.products.length }} products selected</p>
             </div>
           </div>
           
           <!-- Modal Actions -->
           <div class="flex items-center justify-between px-4 py-3 mt-6 border-t">
             <div class="flex space-x-2">
-              <button @click="saveDraft('collection')" class="px-4 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700">
+              <button @click="saveCollectionDraft" class="px-4 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700">
                 Save as Draft
+              </button>
+              <button v-if="collectionForm.id" @click="previewCollection(collectionForm)" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">
+                Preview
               </button>
             </div>
             <div class="flex space-x-2">
               <button @click="handleCollectionSubmit" class="px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700">
-                {{ collectionForm.status === 'draft' ? 'Save Draft' : collectionForm.status === 'scheduled' ? 'Schedule' : 'Publish' }}
+                {{ collectionForm.status === 'draft' ? 'Save Draft' : collectionForm.status === 'scheduled' ? 'Schedule Collection' : 'Publish Collection' }}
               </button>
               <button @click="showCollectionForm = false" class="px-4 py-2 bg-gray-500 text-white text-sm rounded-md hover:bg-gray-700">
                 Cancel
@@ -516,12 +522,23 @@
         </div>
       </div>
     </div>
+
+    <!-- Preview Modal -->
+    <ContentPreviewModal 
+      :show="showPreview" 
+      :preview-type="previewType" 
+      :preview-item="previewItem" 
+      :all-products="allProducts"
+      @close="showPreview = false"
+      @edit="editFromPreview"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import apiClient from '../services/api';
+import ContentPreviewModal from '../components/ContentPreviewModal.vue';
 
 // Reactive data
 const activeTab = ref('banners');
@@ -530,9 +547,20 @@ const collections = ref([]);
 const allProducts = ref([]);
 const loading = ref(false);
 
+// Content statistics
+const contentStats = ref({
+  banners: 0,
+  collections: 0
+});
+
 // Modal states
 const showBannerForm = ref(false);
 const showCollectionForm = ref(false);
+const showPreview = ref(false);
+
+// Preview data
+const previewType = ref('banner');
+const previewItem = ref(null);
 
 // Form data
 const bannerForm = ref({
@@ -558,10 +586,6 @@ const collectionForm = ref({
   scheduledEnd: ''
 });
 
-// Preview settings
-const previewDevice = ref('desktop');
-const previewUrl = 'localhost:5173 (Preview)';
-
 // Search and filter
 const bannerStatusFilter = ref('');
 const collectionStatusFilter = ref('');
@@ -583,7 +607,7 @@ const filteredBanners = computed(() => {
     );
   }
   
-  return filtered;
+  return filtered.sort((a, b) => (a.order || 1) - (b.order || 1));
 });
 
 const filteredCollections = computed(() => {
@@ -603,15 +627,7 @@ const filteredCollections = computed(() => {
   return filtered;
 });
 
-const publishedBanners = computed(() => {
-  return banners.value.filter(banner => banner.status === 'published');
-});
-
-const publishedCollections = computed(() => {
-  return collections.value.filter(collection => collection.status === 'published');
-});
-
-// Methods
+// Helper methods
 const formatDateTime = (dateString) => {
   if (!dateString) return 'Not set';
   return new Date(dateString).toLocaleString();
@@ -629,28 +645,23 @@ const getBannerStatusClass = (status) => {
 
 const getBannerStatusText = (status) => {
   switch (status) {
-    case 'published': return 'Live';
-    case 'draft': return 'Draft';
-    case 'scheduled': return 'Scheduled';
-    case 'expired': return 'Expired';
-    default: return 'Unknown';
+    case 'published': return 'LIVE';
+    case 'draft': return 'DRAFT';
+    case 'scheduled': return 'SCHEDULED';
+    case 'expired': return 'EXPIRED';
+    default: return 'UNKNOWN';
   }
 };
 
-const getCollectionStatusClass = (status) => {
-  return getBannerStatusClass(status);
+const getCollectionStatusClass = getBannerStatusClass;
+const getCollectionStatusText = getBannerStatusText;
+
+const getBannersBy = (status) => {
+  return banners.value.filter(banner => banner.status === status);
 };
 
-const getCollectionStatusText = (status) => {
-  return getBannerStatusText(status);
-};
-
-const getPreviewContainerClass = () => {
-  switch (previewDevice.value) {
-    case 'mobile': return 'max-w-sm mx-auto';
-    case 'tablet': return 'max-w-2xl mx-auto';
-    default: return 'w-full';
-  }
+const getCollectionsBy = (status) => {
+  return collections.value.filter(collection => collection.status === status);
 };
 
 const handleImageError = (event) => {
@@ -660,41 +671,43 @@ const handleImageError = (event) => {
 // CRUD operations
 const fetchBanners = async () => {
   try {
-    loading.value = true;
     const response = await apiClient.admin.get('/content/herobanners');
-    banners.value = response.data;
+    banners.value = response.data || [];
+    contentStats.value.banners = banners.value.length;
   } catch (error) {
     console.error('Error fetching banners:', error);
-  } finally {
-    loading.value = false;
+    banners.value = [];
   }
 };
 
 const fetchCollections = async () => {
   try {
-    loading.value = true;
     const response = await apiClient.admin.get('/content/featuredcollections');
-    collections.value = response.data;
+    collections.value = response.data || [];
+    contentStats.value.collections = collections.value.length;
   } catch (error) {
     console.error('Error fetching collections:', error);
-  } finally {
-    loading.value = false;
+    collections.value = [];
   }
 };
 
 const fetchAllProducts = async () => {
   try {
     const response = await apiClient.admin.get('/products', { params: { limit: 1000 } });
-    allProducts.value = response.data.products || response.data;
+    allProducts.value = response.data.products || response.data || [];
   } catch (error) {
     console.error('Error fetching products:', error);
+    allProducts.value = [];
   }
 };
 
 const refreshContent = async () => {
+  loading.value = true;
   await Promise.all([fetchBanners(), fetchCollections(), fetchAllProducts()]);
+  loading.value = false;
 };
 
+// Form methods
 const openBannerForm = (banner = null) => {
   if (banner) {
     bannerForm.value = {
@@ -704,8 +717,8 @@ const openBannerForm = (banner = null) => {
       imageUrl: banner.imageUrl || '',
       link: banner.link || '',
       status: banner.status || 'draft',
-      scheduledStart: banner.scheduledStart || '',
-      scheduledEnd: banner.scheduledEnd || '',
+      scheduledStart: banner.scheduledStart ? new Date(banner.scheduledStart).toISOString().slice(0, 16) : '',
+      scheduledEnd: banner.scheduledEnd ? new Date(banner.scheduledEnd).toISOString().slice(0, 16) : '',
       order: banner.order || 1,
       priority: banner.priority || 'medium'
     };
@@ -719,7 +732,7 @@ const openBannerForm = (banner = null) => {
       status: 'draft',
       scheduledStart: '',
       scheduledEnd: '',
-      order: 1,
+      order: (banners.value.length + 1),
       priority: 'medium'
     };
   }
@@ -734,8 +747,8 @@ const openCollectionForm = (collection = null) => {
       description: collection.description || '',
       products: collection.products?.map(p => p._id || p) || [],
       status: collection.status || 'draft',
-      scheduledStart: collection.scheduledStart || '',
-      scheduledEnd: collection.scheduledEnd || ''
+      scheduledStart: collection.scheduledStart ? new Date(collection.scheduledStart).toISOString().slice(0, 16) : '',
+      scheduledEnd: collection.scheduledEnd ? new Date(collection.scheduledEnd).toISOString().slice(0, 16) : ''
     };
   } else {
     collectionForm.value = {
@@ -753,6 +766,7 @@ const openCollectionForm = (collection = null) => {
 
 const handleBannerSubmit = async () => {
   try {
+    loading.value = true;
     if (bannerForm.value.id) {
       await apiClient.admin.put(`/content/herobanners/${bannerForm.value.id}`, bannerForm.value);
     } else {
@@ -762,12 +776,15 @@ const handleBannerSubmit = async () => {
     await fetchBanners();
   } catch (error) {
     console.error('Error saving banner:', error);
-    alert('Error saving banner. Please try again.');
+    alert('Error saving banner. Please check your inputs and try again.');
+  } finally {
+    loading.value = false;
   }
 };
 
 const handleCollectionSubmit = async () => {
   try {
+    loading.value = true;
     if (collectionForm.value.id) {
       await apiClient.admin.put(`/content/featuredcollections/${collectionForm.value.id}`, collectionForm.value);
     } else {
@@ -777,18 +794,20 @@ const handleCollectionSubmit = async () => {
     await fetchCollections();
   } catch (error) {
     console.error('Error saving collection:', error);
-    alert('Error saving collection. Please try again.');
+    alert('Error saving collection. Please check your inputs and try again.');
+  } finally {
+    loading.value = false;
   }
 };
 
-const saveDraft = async (type) => {
-  if (type === 'banner') {
-    bannerForm.value.status = 'draft';
-    await handleBannerSubmit();
-  } else {
-    collectionForm.value.status = 'draft';
-    await handleCollectionSubmit();
-  }
+const saveBannerDraft = async () => {
+  bannerForm.value.status = 'draft';
+  await handleBannerSubmit();
+};
+
+const saveCollectionDraft = async () => {
+  collectionForm.value.status = 'draft';
+  await handleCollectionSubmit();
 };
 
 const toggleBannerStatus = async (banner) => {
@@ -811,9 +830,8 @@ const toggleCollectionStatus = async (collection) => {
   }
 };
 
-const deleteBanner = async (id) => {
-  const banner = banners.value.find(b => b._id === id);
-  if (!confirm(`Are you sure you want to delete "${banner?.title}"? This action cannot be undone.`)) {
+const deleteBanner = async (id, title) => {
+  if (!confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
     return;
   }
   
@@ -825,9 +843,8 @@ const deleteBanner = async (id) => {
   }
 };
 
-const deleteCollection = async (id) => {
-  const collection = collections.value.find(c => c._id === id);
-  if (!confirm(`Are you sure you want to delete "${collection?.title}"? This action cannot be undone.`)) {
+const deleteCollection = async (id, title) => {
+  if (!confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
     return;
   }
   
@@ -839,19 +856,26 @@ const deleteCollection = async (id) => {
   }
 };
 
+// Preview methods
 const previewBanner = (banner) => {
-  // Open preview modal or navigate to preview
-  console.log('Previewing banner:', banner);
+  previewType.value = 'banner';
+  previewItem.value = banner;
+  showPreview.value = true;
 };
 
 const previewCollection = (collection) => {
-  // Open preview modal or navigate to preview
-  console.log('Previewing collection:', collection);
+  previewType.value = 'collection';
+  previewItem.value = collection;
+  showPreview.value = true;
 };
 
-const refreshPreview = () => {
-  // Refresh the preview content
-  console.log('Refreshing preview for device:', previewDevice.value);
+const editFromPreview = () => {
+  showPreview.value = false;
+  if (previewType.value === 'banner') {
+    openBannerForm(previewItem.value);
+  } else {
+    openCollectionForm(previewItem.value);
+  }
 };
 
 // Lifecycle

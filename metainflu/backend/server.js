@@ -2,7 +2,7 @@
   File: metainflu/backend/server.js
   Purpose: The main entry point for the Node.js Express backend.
   It sets up middleware, connects to the database, and registers all API routes,
-  including the new vendor routes, dashboard routes, and general admin routes.
+  including the new vendor routes, dashboard routes, general admin routes, and content management.
 */
 const express = require('express');
 const dotenv = require('dotenv');
@@ -25,6 +25,7 @@ const addressRoutes = require('./routes/addressRoutes');
 const geocodeRoutes = require('./routes/geocodeRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes'); // Import dashboard routes
 const generalRoutes = require('./routes/generalRoutes'); // Import general admin routes
+const contentRoutes = require('./routes/contentRoutes'); // Import content routes
 
 const { errorHandler } = require('./middleware/errorMiddleware');
 const { protect } = require('./middleware/authMiddleware');
@@ -112,12 +113,15 @@ mongoose.connect(mongoURI || 'mongodb://localhost:27017/aura-shop', {
 
 // Routes - Order matters! More specific routes first, then general
 app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes); // Admin routes FIRST (most specific)
+app.use('/api/admin', adminRoutes); // Admin routes FIRST (most specific) - includes content management
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/home', homeRoutes);
 
 // General API routes with admin protection (for admin panel compatibility)
 app.use('/api', generalRoutes);
+
+// Content routes (both public and admin)
+app.use('/api/content', contentRoutes);
 
 // Public routes (these come after protected routes)
 app.use('/api/products', productRoutes);
@@ -159,6 +163,7 @@ app.get('/api/info', (req, res) => {
       cart: '/api/cart',
       vendor: '/api/vendor',
       home: '/api/home',
+      content: '/api/content',
       dashboard: '/api/dashboard (admin)',
       users: '/api/users (admin)'
     },
@@ -169,6 +174,9 @@ app.get('/api/info', (req, res) => {
     },
     adminPanel: {
       dashboardAvailable: true,
+      contentManagement: true,
+      schedulingSupport: true,
+      previewFeatures: true,
       backwardCompatible: true,
       endpoints: [
         '/api/dashboard',
@@ -176,7 +184,10 @@ app.get('/api/info', (req, res) => {
         '/api/users',
         '/api/admin/users',
         '/api/orders',
-        '/api/admin/orders'
+        '/api/admin/orders',
+        '/api/admin/content/herobanners',
+        '/api/admin/content/featuredcollections',
+        '/api/admin/content/preview'
       ]
     }
   });
@@ -196,4 +207,8 @@ app.listen(port, () => {
   console.log(`   - /api/users (admin protected)`);
   console.log(`   - /api/orders (admin protected)`);
   console.log(`   - /api/products (admin protected)`);
+  console.log('📝 Content Management endpoints:');
+  console.log(`   - /api/admin/content/herobanners`);
+  console.log(`   - /api/admin/content/featuredcollections`);
+  console.log(`   - /api/admin/content/preview`);
 });
