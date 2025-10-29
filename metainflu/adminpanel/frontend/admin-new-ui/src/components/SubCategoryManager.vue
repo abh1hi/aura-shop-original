@@ -274,7 +274,7 @@ const getCategoryDisplayName = (category) => {
 const fetchSubCategories = async () => {
   loading.value = true;
   try {
-    const response = await apiClient.get('/subcategories');
+    const response = await apiClient.admin.get('/subcategories');
     subCategories.value = response.data;
   } catch (error) {
     console.error('Error fetching subcategories:', error);
@@ -300,11 +300,11 @@ const saveSubCategory = async () => {
   try {
     if (editingSubCategory.value) {
       // Update existing subcategory
-      await apiClient.put(`/subcategories/${editingSubCategory.value._id}`, form.value);
+      await apiClient.admin.put(`/subcategories/${editingSubCategory.value._id}`, form.value);
       emit('alert', 'success', 'Subcategory updated successfully');
     } else {
       // Create new subcategory
-      await apiClient.post('/subcategories', form.value);
+      await apiClient.admin.post('/subcategories', form.value);
       emit('alert', 'success', 'Subcategory created successfully');
     }
     
@@ -326,7 +326,7 @@ const deleteSubCategory = async (subCategory) => {
   }
   
   try {
-    await apiClient.delete(`/subcategories/${subCategory._id}`);
+    await apiClient.admin.delete(`/subcategories/${subCategory._id}`);
     emit('alert', 'success', 'Subcategory deleted successfully');
     await fetchSubCategories();
     emit('refresh');
