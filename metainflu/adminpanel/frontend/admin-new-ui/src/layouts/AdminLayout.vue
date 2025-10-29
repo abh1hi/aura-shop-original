@@ -56,8 +56,8 @@ const logout = () => {
 
 const checkApiHealth = async () => {
   try {
-    await apiClient.get('/health');
-    isApiConnected.value = true;
+    const isHealthy = await apiClient.healthCheck();
+    isApiConnected.value = isHealthy;
   } catch (error) {
     isApiConnected.value = false;
   }
