@@ -2,7 +2,7 @@
   File: metainflu/backend/server.js
   Purpose: The main entry point for the Node.js Express backend.
   It sets up middleware, connects to the database, and registers all API routes,
-  including the new vendor routes and dashboard routes.
+  including the new vendor routes, dashboard routes, and general admin routes.
 */
 const express = require('express');
 const dotenv = require('dotenv');
@@ -24,6 +24,7 @@ const wishlistRoutes = require('./routes/wishlistRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const geocodeRoutes = require('./routes/geocodeRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes'); // Import dashboard routes
+const generalRoutes = require('./routes/generalRoutes'); // Import general admin routes
 
 const { errorHandler } = require('./middleware/errorMiddleware');
 const { protect } = require('./middleware/authMiddleware');
@@ -109,22 +110,26 @@ mongoose.connect(mongoURI || 'mongodb://localhost:27017/aura-shop', {
   process.exit(1);
 });
 
-// Routes
+// Routes - Order matters! More specific routes first, then general
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes); // Admin routes FIRST (most specific)
+app.use('/api/vendor', vendorRoutes);
+app.use('/api/home', homeRoutes);
+
+// General API routes with admin protection (for admin panel compatibility)
+app.use('/api', generalRoutes);
+
+// Public routes (these come after protected routes)
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api/subcategories', subCategoryRoutes); // Mount sub-category routes
+app.use('/api/subcategories', subCategoryRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/cart', cartRoutes);
-app.use('/api/admin', adminRoutes); 
-app.use('/api/vendor', vendorRoutes); // Use new vendor routes
-app.use('/api/home', homeRoutes);
 app.use('/api/parent-categories', parentCategoryRoutes);
 app.use('/api/brands', brandRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/geocode', geocodeRoutes);
-app.use('/api', dashboardRoutes); // Add dashboard routes for backward compatibility
 
 // Test protected route
 app.get('/api/protected', protect, (req, res) => {
@@ -147,19 +152,32 @@ app.get('/api/info', (req, res) => {
     version: '1.0.0',
     endpoints: {
       auth: '/api/auth',
+      admin: '/api/admin (protected)',
       products: '/api/products', 
       categories: '/api/categories',
       orders: '/api/orders',
       cart: '/api/cart',
-      admin: '/api/admin',
       vendor: '/api/vendor',
       home: '/api/home',
-      dashboard: '/api/dashboard'
+      dashboard: '/api/dashboard (admin)',
+      users: '/api/users (admin)'
     },
     cors: {
       enabled: true,
       allowsCredentials: true,
       supportsMobile: true
+    },
+    adminPanel: {
+      dashboardAvailable: true,
+      backwardCompatible: true,
+      endpoints: [
+        '/api/dashboard',
+        '/api/admin/dashboard',
+        '/api/users',
+        '/api/admin/users',
+        '/api/orders',
+        '/api/admin/orders'
+      ]
     }
   });
 });
@@ -172,7 +190,10 @@ app.listen(port, () => {
   console.log(`🚀 Server running on port ${port}`);
   console.log(`📱 Mobile apps can connect via: http://YOUR_IP:${port}`);
   console.log(`🌐 Web apps can connect via: http://localhost:${port}`);
-  console.log('📊 Dashboard endpoints available at:');
-  console.log(`   - /api/dashboard (legacy support)`);
-  console.log(`   - /api/admin/dashboard (preferred)`);
+  console.log('📊 Admin Dashboard endpoints available at:');
+  console.log(`   - /api/dashboard (backward compatibility)`);
+  console.log(`   - /api/admin/dashboard (primary)`);
+  console.log(`   - /api/users (admin protected)`);
+  console.log(`   - /api/orders (admin protected)`);
+  console.log(`   - /api/products (admin protected)`);
 });
