@@ -25,6 +25,32 @@ const {
   updateFeaturedCollection,
   deleteFeaturedCollection,
 } = require('../controllers/contentController');
+
+// Import category controllers for admin access
+const {
+  getCategories,
+  getCategoryById,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+} = require('../controllers/categoryController');
+
+const {
+  getParentCategories,
+  getParentCategoryById,
+  createParentCategory,
+  updateParentCategory,
+  deleteParentCategory,
+} = require('../controllers/parentCategoryController');
+
+const {
+  getSubCategories,
+  getSubCategoryById,
+  createSubCategory,
+  updateSubCategory,
+  deleteSubCategory,
+} = require('../controllers/subCategoryController');
+
 const { protect, admin } = require('../middleware/authMiddleware');
 
 // All routes in this file are protected by admin middleware
@@ -46,10 +72,23 @@ router.route('/products').get(getProductsAdmin);
 router.route('/orders').get(getOrdersAdmin);
 router.route('/orders/:id/status').put(updateOrderStatusAdmin);
 
-// Category management
+// Category management (legacy - for approval workflow)
 router.route('/categories/pending').get(getPendingCategories);
 router.route('/categories/:id/approve').put(approveCategory);
 router.route('/categories/:id').delete(rejectCategory); // Using DELETE to reject/delete
+
+// Direct Category Management - Admin can directly manage all category types
+// Parent Categories
+router.route('/parent-categories').get(getParentCategories).post(createParentCategory);
+router.route('/parent-categories/:id').get(getParentCategoryById).put(updateParentCategory).delete(deleteParentCategory);
+
+// Categories
+router.route('/categories-direct').get(getCategories).post(createCategory);
+router.route('/categories-direct/:id').get(getCategoryById).put(updateCategory).delete(deleteCategory);
+
+// Subcategories
+router.route('/subcategories').get(getSubCategories).post(createSubCategory);
+router.route('/subcategories/:id').get(getSubCategoryById).put(updateSubCategory).delete(deleteSubCategory);
 
 // Content Management - Hero Banners
 router.route('/content/herobanners').get(getHeroBanners).post(createHeroBanner);
