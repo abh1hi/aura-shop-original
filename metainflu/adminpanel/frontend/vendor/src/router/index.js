@@ -17,6 +17,7 @@ import ManageProducts from '../pages/ManageProducts.vue';
 import AddProduct from '../pages/AddProduct.vue';
 import EditProduct from '../pages/EditProduct.vue';
 import BrandPage from '../pages/BrandPage.vue';
+import VendorBrandPage from '../pages/VendorBrandPage.vue';
 
 const routes = [
   {
@@ -31,6 +32,7 @@ const routes = [
       { path: 'products/add', name: 'AddProduct', component: AddProduct, meta: { title: 'Add Product' } },
       { path: 'products/edit/:id', name: 'EditProduct', component: EditProduct, meta: { title: 'Edit Product' } },
       { path: 'brand', name: 'BrandPage', component: BrandPage, meta: { title: 'Brand Page' } },
+      { path: 'brands', name: 'VendorBrandPage', component: VendorBrandPage, meta: { title: 'My Brands' } },
     ],
   },
   {
