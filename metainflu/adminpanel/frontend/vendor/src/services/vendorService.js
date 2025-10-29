@@ -45,10 +45,12 @@ const handleResponse = async (response) => {
   try {
     errorData = await response.json();
   } catch {
-    errorData = { message: 'Network error or invalid response' };
+    errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
   }
 
   if (!response.ok) {
+    console.error('API Error Response:', errorData);
+    
     // Handle different HTTP status codes
     switch (response.status) {
       case 400:
@@ -61,13 +63,40 @@ const handleResponse = async (response) => {
         throw new Error('Resource not found.');
       case 422:
         // Handle validation errors specifically
-        if (errorData.errors) {
-          const validationErrors = Array.isArray(errorData.errors) 
-            ? errorData.errors.map(err => err.message || err).join(', ')
-            : Object.values(errorData.errors).flat().join(', ');
-          throw new Error(`Validation failed: ${validationErrors}`);
+        let validationMessage = 'Validation failed';
+        
+        if (errorData.message) {
+          validationMessage = errorData.message;
+        } else if (errorData.errors) {
+          // Handle different error formats
+          if (Array.isArray(errorData.errors)) {
+            // Array of error objects
+            const errorMessages = errorData.errors.map(err => {
+              if (typeof err === 'string') return err;
+              if (err.message) return err.message;
+              if (err.msg) return err.msg;
+              return JSON.stringify(err);
+            });
+            validationMessage = `Validation failed: ${errorMessages.join(', ')}`;
+          } else if (typeof errorData.errors === 'object') {
+            // Object with field errors
+            const errorMessages = [];
+            Object.entries(errorData.errors).forEach(([field, messages]) => {
+              if (Array.isArray(messages)) {
+                messages.forEach(msg => errorMessages.push(`${field}: ${msg}`));
+              } else if (typeof messages === 'string') {
+                errorMessages.push(`${field}: ${messages}`);
+              } else {
+                errorMessages.push(`${field}: ${JSON.stringify(messages)}`);
+              }
+            });
+            validationMessage = `Validation failed: ${errorMessages.join(', ')}`;
+          } else {
+            validationMessage = `Validation failed: ${JSON.stringify(errorData.errors)}`;
+          }
         }
-        throw new Error(errorData.message || 'Validation failed. Please check your input.');
+        
+        throw new Error(validationMessage);
       case 500:
         throw new Error('Server error. Please try again later.');
       default:
@@ -170,25 +199,47 @@ const getVendorProducts = async () => {
  */
 const createProduct = async (productData) => {
   try {
+    console.log('Creating product with data:', productData);
+    
     // Ensure required fields are present and properly formatted
     const formattedProductData = {
       name: productData.name?.trim(),
       description: productData.description?.trim(),
-      variants: productData.variants || [{
-        sku: `${productData.name?.replace(/\s+/g, '-').toLowerCase()}-default`,
-        price: productData.price || 0,
-        stock: productData.stock || 0,
-        attributes: [],
-        status: 'active'
-      }],
+      // Handle variants - ensure we always have at least one variant
+      variants: productData.variants && productData.variants.length > 0 ? 
+        productData.variants.map(variant => ({
+          sku: variant.sku?.trim() || `${productData.name?.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+          price: parseFloat(variant.price) || 0,
+          stock: parseInt(variant.stock) || 0,
+          attributes: variant.attributes || [],
+          status: variant.status || 'active'
+        })) : [{
+          sku: `${productData.name?.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+          price: parseFloat(productData.price) || 0,
+          stock: parseInt(productData.stock) || 0,
+          attributes: [],
+          status: 'active'
+        }],
+      // Handle categories
       categories: productData.categories || (productData.category ? [productData.category] : []),
-      images: productData.images || [],
-      tags: productData.tags || [],
+      // Handle images
+      images: productData.images && Array.isArray(productData.images) ? 
+        productData.images.filter(img => img.url?.trim()).map((img, index) => ({
+          url: img.url.trim(),
+          altText: img.altText || '',
+          position: index,
+          isPrimary: index === 0
+        })) : [],
+      // Handle tags
+      tags: productData.tags && Array.isArray(productData.tags) ? productData.tags : [],
+      // Default values
       currency: 'INR',
       isApproved: false,
       lifecycleStatus: 'active',
       moderationStatus: 'pending'
     };
+
+    console.log('Formatted product data:', formattedProductData);
 
     const response = await fetch(API_BASE_URL + 'products', {
       method: 'POST',
