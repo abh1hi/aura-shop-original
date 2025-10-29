@@ -1,345 +1,354 @@
 <template>
-  <AdminLayout>
-    <div class="space-y-6">
-      <!-- Dashboard Header -->
+  <div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-neutral-900">New report</h1>
-          <div class="flex items-center space-x-4 mt-2">
-            <div class="flex items-center space-x-2">
-              <BaseIcon name="calendar" size="sm" class="text-neutral-400" />
-              <span class="text-sm text-neutral-600">{{ dateRange }}</span>
-            </div>
-            <div class="flex -space-x-2">
-              <img
-                v-for="user in teamMembers"
-                :key="user.id"
-                :src="user.avatar"
-                :alt="user.name"
-                :title="user.name"
-                class="w-8 h-8 rounded-full border-2 border-white"
-              >
-            </div>
+          <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p class="text-sm text-gray-600 mt-1">Complete platform overview and analytics</p>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2">
+            <div :class="['w-3 h-3 rounded-full', isOnline ? 'bg-green-500' : 'bg-red-500']"></div>
+            <span class="text-sm text-gray-600">{{ isOnline ? 'Online' : 'Offline' }}</span>
           </div>
-        </div>
-        
-        <div class="flex items-center space-x-3">
-          <BaseButton variant="ghost" icon="filter" size="sm">
-            Filters
-          </BaseButton>
-          <BaseButton variant="ghost" icon="share" size="sm">
-            Export
-          </BaseButton>
-          <BaseButton variant="primary" icon="plus" size="sm">
-            New Report
-          </BaseButton>
-        </div>
-      </div>
-      
-      <!-- Main Metrics -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Revenue Card -->
-        <div class="lg:col-span-2">
-          <BaseCard variant="default" padding="normal">
-            <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-neutral-900">Revenue</h3>
-                <div class="flex items-center space-x-2">
-                  <BaseBadge variant="danger" size="sm">-7.9%</BaseBadge>
-                  <span class="text-sm text-neutral-500">$27,335.09</span>
-                </div>
-              </div>
-              
-              <div>
-                <div class="flex items-baseline space-x-2">
-                  <span class="text-3xl font-bold text-neutral-900">$528,976</span>
-                  <span class="text-lg text-neutral-400">.82</span>
-                </div>
-                <p class="text-sm text-neutral-500 mt-1">
-                  vs prev. $501,641.73 Jun 1 - Aug 31, 2023
-                </p>
-              </div>
-            </div>
-          </BaseCard>
-        </div>
-        
-        <!-- Top Sales -->
-        <MetricCard
-          label="Top sales"
-          value="72"
-          icon="trending-up"
-          icon-color="success"
-          :trend="{ type: 'up', value: '8.5%' }"
-          badge="Featured"
-          badge-variant="success"
-        />
-        
-        <!-- Best Deal -->
-        <MetricCard
-          label="Best deal"
-          value="$298"
-          icon="heart"
-          icon-color="danger"
-          :trend="{ type: 'up', value: '12%' }"
-          currency
-        />
-      </div>
-      
-      <!-- Secondary Metrics -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <MetricCard
-          v-for="metric in secondaryMetrics"
-          :key="metric.id"
-          :label="metric.label"
-          :value="metric.value"
-          size="sm"
-          :trend="metric.trend"
-        />
-      </div>
-      
-      <!-- Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Platform Performance -->
-        <div class="lg:col-span-2 space-y-6">
-          <!-- Sales Dynamic Chart -->
-          <ChartCard
-            title="Sales dynamic"
-            type="line"
-            :chart-data="salesChartData"
-            :loading="chartsLoading"
-            height="280px"
-            @filter-change="handleChartFilter"
-          />
-          
-          <!-- Work with Platforms -->
-          <BaseCard title="Work with platforms" variant="default" padding="none">
-            <div class="divide-y divide-neutral-200">
-              <PlatformItem
-                v-for="platform in platforms"
-                :key="platform.id"
-                :platform="platform"
-                :value="platform.revenue"
-                :percentage="platform.percentage"
-                :trend="platform.trend"
-              />
-            </div>
-          </BaseCard>
-        </div>
-        
-        <!-- Right Sidebar -->
-        <div class="space-y-6">
-          <!-- Platform Value Chart -->
-          <BaseCard title="Platform value" variant="default" padding="normal">
-            <div class="space-y-4">
-              <div class="text-center">
-                <div class="text-2xl font-bold text-neutral-900">45.3%</div>
-                <div class="text-sm text-neutral-500">$71,048</div>
-              </div>
-              
-              <!-- Pie chart placeholder -->
-              <div class="w-32 h-32 mx-auto bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center">
-                <div class="w-16 h-16 bg-white rounded-full"></div>
-              </div>
-              
-              <div class="space-y-2">
-                <div v-for="item in platformValues" :key="item.label" class="flex items-center justify-between text-sm">
-                  <div class="flex items-center space-x-2">
-                    <div :class="['w-3 h-3 rounded-full', item.color]"></div>
-                    <span class="text-neutral-600">{{ item.label }}</span>
-                  </div>
-                  <span class="font-medium text-neutral-900">{{ item.value }}</span>
-                </div>
-              </div>
-            </div>
-          </BaseCard>
-          
-          <!-- Top Performers -->
-          <BaseCard title="Top performers" variant="default" padding="none">
-            <div class="divide-y divide-neutral-200">
-              <ListItem
-                v-for="performer in topPerformers"
-                :key="performer.id"
-                :title="performer.name"
-                :subtitle="performer.role"
-                :avatar="performer.avatar"
-                :metrics="{ primary: performer.sales, secondary: performer.deals + ' deals' }"
-                :trend="performer.trend"
-                :bordered="false"
-              />
-            </div>
-          </BaseCard>
+          <button @click="refreshData" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm hover:bg-indigo-700 disabled:opacity-50">
+            <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ loading ? 'Refreshing...' : 'Refresh' }}
+          </button>
         </div>
       </div>
     </div>
-  </AdminLayout>
+
+    <div class="p-6 space-y-6">
+      <!-- Key Metrics Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Revenue Card -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p class="text-3xl font-bold text-gray-900">${{ formatNumber(dashboardData.summary?.totalRevenue || 0) }}</p>
+              <p class="text-sm mt-2" :class="getGrowthClass(dashboardData.summary?.revenueGrowth)">
+                <span>{{ formatGrowth(dashboardData.summary?.revenueGrowth) }} from last month</span>
+              </p>
+            </div>
+            <div class="p-3 bg-green-100 rounded-full">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Orders Card -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Orders</p>
+              <p class="text-3xl font-bold text-gray-900">{{ formatNumber(dashboardData.summary?.totalOrders || 0) }}</p>
+              <p class="text-sm mt-2" :class="getGrowthClass(dashboardData.summary?.orderGrowth)">
+                <span>{{ formatGrowth(dashboardData.summary?.orderGrowth) }} from last month</span>
+              </p>
+            </div>
+            <div class="p-3 bg-blue-100 rounded-full">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customers Card -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Customers</p>
+              <p class="text-3xl font-bold text-gray-900">{{ formatNumber(dashboardData.summary?.totalCustomers || 0) }}</p>
+              <p class="text-sm mt-2" :class="getGrowthClass(dashboardData.summary?.customerGrowth)">
+                <span>{{ formatGrowth(dashboardData.summary?.customerGrowth) }} from last month</span>
+              </p>
+            </div>
+            <div class="p-3 bg-purple-100 rounded-full">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products Card -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Products</p>
+              <p class="text-3xl font-bold text-gray-900">{{ formatNumber(dashboardData.summary?.totalProducts || 0) }}</p>
+              <p class="text-sm mt-2 text-gray-500">
+                <span>{{ dashboardData.summary?.pendingProducts || 0 }} pending approval</span>
+              </p>
+            </div>
+            <div class="p-3 bg-orange-100 rounded-full">
+              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Secondary Metrics -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white rounded-lg shadow p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600">Conversion Rate</p>
+              <p class="text-xl font-bold text-gray-900">{{ dashboardData.summary?.conversionRate || 0 }}%</p>
+            </div>
+            <div class="text-2xl text-indigo-600">📊</div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600">Avg Order Value</p>
+              <p class="text-xl font-bold text-gray-900">${{ dashboardData.summary?.averageOrderValue || 0 }}</p>
+            </div>
+            <div class="text-2xl text-green-600">💰</div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600">Active Carts</p>
+              <p class="text-xl font-bold text-gray-900">{{ dashboardData.summary?.activeCarts || 0 }}</p>
+            </div>
+            <div class="text-2xl text-yellow-600">🛒</div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600">Pending Orders</p>
+              <p class="text-xl font-bold text-gray-900">{{ dashboardData.summary?.pendingOrders || 0 }}</p>
+            </div>
+            <div class="text-2xl text-red-600">⏳</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Revenue Chart -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Revenue Trend (30 Days)</h3>
+          <div class="h-64 flex items-center justify-center bg-gray-50 rounded border-2 border-dashed border-gray-300">
+            <div class="text-center">
+              <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              <p class="text-gray-500">Revenue Chart</p>
+              <p class="text-sm text-gray-400">Chart implementation placeholder</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Status Distribution -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Order Status Distribution</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600">Completed</span>
+              <span class="text-sm font-medium text-green-600">{{ dashboardData.summary?.completedOrders || 0 }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600">Pending</span>
+              <span class="text-sm font-medium text-yellow-600">{{ dashboardData.summary?.pendingOrders || 0 }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600">Processing</span>
+              <span class="text-sm font-medium text-blue-600">{{ dashboardData.summary?.monthlyOrders || 0 }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Tables -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Orders -->
+        <div class="bg-white rounded-lg shadow">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Recent Orders</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-if="!dashboardData.recentOrders?.length">
+                  <td colspan="4" class="px-6 py-4 text-center text-gray-500">No recent orders</td>
+                </tr>
+                <tr v-for="order in dashboardData.recentOrders?.slice(0, 5)" :key="order._id">
+                  <td class="px-6 py-4 text-sm text-gray-900">#{{ order._id.slice(-6) }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-900">{{ order.user?.name || 'N/A' }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-900">${{ order.totalPrice }}</td>
+                  <td class="px-6 py-4">
+                    <span :class="getStatusBadgeClass(order.status)" class="px-2 py-1 text-xs rounded-full">
+                      {{ order.status || 'pending' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Top Products -->
+        <div class="bg-white rounded-lg shadow">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Top Selling Products</h3>
+          </div>
+          <div class="p-6">
+            <div class="space-y-4">
+              <div v-if="!dashboardData.topSellingProducts?.length" class="text-center text-gray-500 py-8">
+                No product sales data available
+              </div>
+              <div v-for="product in dashboardData.topSellingProducts?.slice(0, 5)" :key="product._id" class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <span class="text-gray-500 text-xs">IMG</span>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
+                    <p class="text-xs text-gray-500">{{ product.totalQuantitySold }} sold</p>
+                  </div>
+                </div>
+                <span class="text-sm font-medium text-gray-900">${{ product.totalRevenue }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Overview -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-medium text-gray-900">Platform Overview</h3>
+        </div>
+        <div class="p-6">
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div class="text-center">
+              <p class="text-2xl font-bold text-gray-900">{{ dashboardData.summary?.totalUsers || 0 }}</p>
+              <p class="text-sm text-gray-600">Total Users</p>
+            </div>
+            <div class="text-center">
+              <p class="text-2xl font-bold text-gray-900">{{ dashboardData.summary?.totalCategories || 0 }}</p>
+              <p class="text-sm text-gray-600">Categories</p>
+            </div>
+            <div class="text-center">
+              <p class="text-2xl font-bold text-gray-900">{{ dashboardData.summary?.approvedProducts || 0 }}</p>
+              <p class="text-sm text-gray-600">Live Products</p>
+            </div>
+            <div class="text-center">
+              <p class="text-2xl font-bold text-gray-900">{{ dashboardData.summary?.activeUsersLast30Days || 0 }}</p>
+              <p class="text-sm text-gray-600">Active Users</p>
+            </div>
+            <div class="text-center">
+              <p class="text-2xl font-bold text-gray-900">{{ dashboardData.summary?.abandonedCarts || 0 }}</p>
+              <p class="text-sm text-gray-600">Abandoned Carts</p>
+            </div>
+            <div class="text-center">
+              <p class="text-2xl font-bold text-gray-900">{{ dashboardData.summary?.lowStockProducts || 0 }}</p>
+              <p class="text-sm text-gray-600">Low Stock</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
-<script>
-import AdminLayout from '../layouts/AdminLayout.vue'
-import BaseCard from '../components/base/BaseCard.vue'
-import BaseButton from '../components/base/BaseButton.vue'
-import BaseIcon from '../components/base/BaseIcon.vue'
-import BaseBadge from '../components/base/BaseBadge.vue'
-import MetricCard from '../components/dashboard/MetricCard.vue'
-import ChartCard from '../components/dashboard/ChartCard.vue'
-import PlatformItem from '../components/dashboard/PlatformItem.vue'
-import ListItem from '../components/dashboard/ListItem.vue'
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue';
+import apiClient from '../services/api';
 
-export default {
-  name: 'AdminDashboard',
-  components: {
-    AdminLayout,
-    BaseCard,
-    BaseButton,
-    BaseIcon,
-    BaseBadge,
-    MetricCard,
-    ChartCard,
-    PlatformItem,
-    ListItem
-  },
-  data() {
-    return {
-      chartsLoading: false,
-      dateRange: 'Sep 1 - Nov 30, 2023',
-      teamMembers: [
-        {
-          id: 1,
-          name: 'Armin A.',
-          avatar: 'https://ui-avatars.com/api/?name=Armin+A&background=3b82f6&color=fff'
-        },
-        {
-          id: 2,
-          name: 'Eren Y.',
-          avatar: 'https://ui-avatars.com/api/?name=Eren+Y&background=10b981&color=fff'
-        },
-        {
-          id: 3,
-          name: 'Mikasa A.',
-          avatar: 'https://ui-avatars.com/api/?name=Mikasa+A&background=f59e0b&color=fff'
-        }
-      ],
-      secondaryMetrics: [
-        {
-          id: 1,
-          label: 'Armin A.',
-          value: '$209,633',
-          trend: { type: 'up', value: '11%' }
-        },
-        {
-          id: 2,
-          label: 'Mikasa A.',
-          value: '$156,841',
-          trend: { type: 'neutral', value: '54%' }
-        },
-        {
-          id: 3,
-          label: 'Deals',
-          value: '5',
-          trend: { type: 'up', value: '7.9%' }
-        },
-        {
-          id: 4,
-          label: 'Value',
-          value: '$288',
-          trend: { type: 'up', value: '1.2%' }
-        },
-        {
-          id: 5,
-          label: 'Win rate',
-          value: '64%',
-          trend: { type: 'down', value: '2.1%' }
-        }
-      ],
-      salesChartData: [
-        { label: 'Jan', sales: 65, revenue: 45000, leads: 120 },
-        { label: 'Feb', sales: 75, revenue: 52000, leads: 140 },
-        { label: 'Mar', sales: 85, revenue: 61000, leads: 160 },
-        { label: 'Apr', sales: 70, revenue: 48000, leads: 130 },
-        { label: 'May', sales: 95, revenue: 71000, leads: 180 },
-        { label: 'Jun', sales: 88, revenue: 65000, leads: 170 },
-        { label: 'Jul', sales: 92, revenue: 68000, leads: 175 },
-        { label: 'Aug', sales: 78, revenue: 55000, leads: 145 }
-      ],
-      platforms: [
-        {
-          id: 1,
-          name: 'Dribbble',
-          icon: 'heart',
-          color: 'bg-pink-500',
-          revenue: 227669,
-          percentage: '43%',
-          trend: { type: 'up', value: '5.2%' }
-        },
-        {
-          id: 2,
-          name: 'Instagram',
-          icon: 'camera',
-          color: 'bg-gradient-to-br from-purple-600 to-pink-500',
-          revenue: 142823,
-          percentage: '27%',
-          trend: { type: 'up', value: '3.1%' }
-        },
-        {
-          id: 3,
-          name: 'Behance',
-          icon: 'squares-2x2',
-          color: 'bg-blue-600',
-          revenue: 89835,
-          percentage: '17%',
-          trend: { type: 'down', value: '1.2%' }
-        },
-        {
-          id: 4,
-          name: 'Google',
-          icon: 'magnifying-glass',
-          color: 'bg-blue-500',
-          revenue: 37028,
-          percentage: '7%',
-          trend: { type: 'up', value: '2.8%' }
-        }
-      ],
-      platformValues: [
-        { label: 'Dribbble', value: '28.1%', color: 'bg-pink-500' },
-        { label: 'Instagram', value: '5.4%', color: 'bg-purple-500' },
-        { label: 'Other', value: '7.1%', color: 'bg-neutral-300' }
-      ],
-      topPerformers: [
-        {
-          id: 1,
-          name: 'Armin A.',
-          role: 'Sales Manager',
-          avatar: 'https://ui-avatars.com/api/?name=Armin+A&background=3b82f6&color=fff',
-          sales: '$209,633',
-          deals: 118,
-          trend: { type: 'up', value: '11%' }
-        },
-        {
-          id: 2,
-          name: 'Mikasa A.',
-          role: 'Marketing Lead',
-          avatar: 'https://ui-avatars.com/api/?name=Mikasa+A&background=f59e0b&color=fff',
-          sales: '$156,841',
-          deals: 103,
-          trend: { type: 'up', value: '8.2%' }
-        },
-        {
-          id: 3,
-          name: 'Eren Y.',
-          role: 'Business Dev',
-          avatar: 'https://ui-avatars.com/api/?name=Eren+Y&background=10b981&color=fff',
-          sales: '$117,115',
-          deals: 84,
-          trend: { type: 'up', value: '5.4%' }
-        }
-      ]
-    }
-  },
-  methods: {
-    handleChartFilter(filter) {
-      console.log('Chart filter changed to:', filter)
-      // Implement chart filter logic
-    }
+// Reactive data
+const dashboardData = ref({});
+const loading = ref(false);
+const isOnline = ref(true);
+let refreshInterval = null;
+
+// Methods
+const formatNumber = (num) => {
+  return new Intl.NumberFormat().format(num);
+};
+
+const formatGrowth = (growth) => {
+  if (!growth) return '0%';
+  const sign = growth > 0 ? '+' : '';
+  return `${sign}${growth}%`;
+};
+
+const getGrowthClass = (growth) => {
+  if (!growth) return 'text-gray-500';
+  return growth > 0 ? 'text-green-600' : 'text-red-600';
+};
+
+const getStatusBadgeClass = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'completed':
+    case 'delivered':
+      return 'bg-green-100 text-green-800';
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'cancelled':
+      return 'bg-red-100 text-red-800';
+    case 'processing':
+      return 'bg-blue-100 text-blue-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
   }
-}
+};
+
+const fetchDashboardData = async () => {
+  try {
+    loading.value = true;
+    const response = await apiClient.admin.get('/dashboard');
+    dashboardData.value = response.data;
+    isOnline.value = true;
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    isOnline.value = false;
+  } finally {
+    loading.value = false;
+  }
+};
+
+const refreshData = () => {
+  fetchDashboardData();
+};
+
+// Lifecycle
+onMounted(() => {
+  fetchDashboardData();
+  // Set up auto-refresh every 5 minutes
+  refreshInterval = setInterval(fetchDashboardData, 5 * 60 * 1000);
+});
+
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+  }
+});
 </script>
