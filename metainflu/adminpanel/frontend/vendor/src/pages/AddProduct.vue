@@ -20,7 +20,7 @@
             <p v-if="getFieldError('name')" class="text-red-500 text-sm mt-1">{{ getFieldError('name') }}</p>
           </div>
 
-          <!-- Brand -->
+          <!-- Brand (Vendor-Owned) -->
           <div>
             <label for="brand" class="block text-sm font-medium text-text-secondary mb-1">Brand *</label>
             <select id="brand" v-model="selectedBrand" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary">
@@ -28,6 +28,7 @@
               <option v-for="brand in brands" :key="brand._id" :value="brand._id">{{ brand.name }}</option>
             </select>
             <p v-if="getFieldError('brand')" class="text-red-500 text-sm mt-1">{{ getFieldError('brand') }}</p>
+            <p class="text-xs text-gray-500 mt-1">Manage your brands under <router-link class="text-primary underline" to="/brands">My Brands</router-link>.</p>
           </div>
 
           <!-- Category -->
@@ -99,7 +100,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import vendorService from '../services/vendorService'
 import categoryService from '../services/categoryService'
-import brandService from '../services/brandService'
+import vendorBrandService from '../services/vendorBrandService'
 import { productValidation, errorUtils } from '../utils/validation'
 
 const router = useRouter()
@@ -157,7 +158,7 @@ const addVariant = () => newProduct.value.variants.push({ sku: '', price: 0, sto
 const removeVariant = (index) => { if (newProduct.value.variants.length > 1) newProduct.value.variants.splice(index, 1) }
 
 const fetchCategories = async () => { categories.value = await categoryService.getCategories() }
-const fetchBrands = async () => { brands.value = await brandService.getBrands() }
+const fetchBrands = async () => { brands.value = await vendorBrandService.getBrands() }
 
 const saveProduct = async () => {
   errorMessage.value = ''
