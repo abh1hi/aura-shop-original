@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between p-4 border-b border-border">
       <h2 class="text-xl font-bold text-text-primary">Vendor Panel</h2>
       <button @click="$emit('close-sidebar')" class="p-2 rounded-full hover:bg-gray-100 lg:hidden">
-        <svg class="w-6 h-6 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <svg class="w-6 h-6 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
@@ -17,7 +17,7 @@
 
     <div class="p-4 border-t border-border">
       <button @click="logout" class="flex items-center w-full px-4 py-2.5 text-danger rounded-lg hover:bg-red-50">
-        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
         <span>Logout</span>
       </button>
     </div>
@@ -30,7 +30,8 @@ import { globalState } from '../main.js';
 import authService from '../services/authService';
 import { HomeIcon, ChartBarIcon, ClipboardDocumentListIcon, CubeIcon, UserIcon, BellIcon, DocumentTextIcon, BuildingStorefrontIcon } from '@heroicons/vue/24/outline';
 
-defineProps({ isOpen: { type: Boolean, required: true } });
+// Make isOpen optional with a default true to avoid missing-prop warnings on desktop usage
+defineProps({ isOpen: { type: Boolean, default: true } });
 const emit = defineEmits(['close-sidebar']);
 const router = useRouter();
 
@@ -39,6 +40,7 @@ const navItems = [
   { name: 'Reports', path: '/reports', icon: ChartBarIcon },
   { name: 'My Tasks', path: '/tasks', icon: ClipboardDocumentListIcon },
   { name: 'Products', path: '/products', icon: CubeIcon },
+  { name: 'My Brands', path: '/brands', icon: BuildingStorefrontIcon },
   { name: 'Brand Page', path: '/brand', icon: BuildingStorefrontIcon },
   { name: 'Invoices', path: '/invoices', icon: DocumentTextIcon },
   { name: 'Notifications', path: '/notifications', icon: BellIcon },
