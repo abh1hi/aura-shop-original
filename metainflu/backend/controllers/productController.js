@@ -39,6 +39,24 @@ const getProductById = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Get all products for admin with pagination
+// @route   GET /api/admin/products
+// @access  Private/Admin
+const getProductsAdmin = asyncHandler(async (req, res) => {
+  const pageSize = 10;
+  const page = Number(req.query.pageNumber) || 1;
+
+  const count = await Product.countDocuments({});
+  const products = await Product.find({})
+    .populate('categories', 'name')
+    .populate('user', 'name')
+    .limit(pageSize)
+    .skip(pageSize * (page - 1))
+    .sort({ createdAt: -1 });
+
+  res.json({ products, page, pages: Math.ceil(count / pageSize) });
+});
+
 // @desc    Create a product
 // @route   POST /api/products
 // @access  Private/Vendor
@@ -201,6 +219,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
 module.exports = {
   getProducts,
   getProductById,
+  getProductsAdmin,
   createProduct,
   updateProduct,
   deleteProduct,

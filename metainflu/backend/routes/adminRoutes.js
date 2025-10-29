@@ -31,13 +31,10 @@ const { protect, admin } = require('../middleware/authMiddleware');
 router.use(protect, admin);
 
 // Health Check
-router.route('/health').get((req, res) => res.status(200).json({ status: 'OK' }));
+router.route('/health').get((req, res) => res.status(200).json({ message: 'Admin API is healthy' }));
 
 // Dashboard
 router.route('/dashboard').get(getDashboardStats);
-
-// Health Check
-router.route('/health').get((req, res) => res.status(200).json({ message: 'Admin API is healthy' }));
 
 // User management
 router.route('/users').get(getUsersAdmin);
