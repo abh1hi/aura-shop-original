@@ -155,11 +155,11 @@ const hideAlert = () => {
 
 const fetchAllCategories = async () => {
   try {
-    // Fetch all category types in parallel
+    // Fetch all category types in parallel using admin endpoints
     const [parentRes, categoryRes, subCategoryRes] = await Promise.all([
-      apiClient.get('/parent-categories'),
-      apiClient.get('/categories'),
-      apiClient.get('/subcategories')
+      apiClient.admin.get('/parent-categories'),
+      apiClient.get('/categories'), // Use general endpoint for reading
+      apiClient.admin.get('/subcategories')
     ]);
     
     parentCategories.value = parentRes.data;
