@@ -6,15 +6,16 @@
 const express = require('express');
 const router = express.Router();
 const { registerUser, loginUser, loginAdmin, loginVendor } = require('../controllers/authController');
+const { registerValidationRules, loginValidationRules } = require('../middleware/validators/authValidator');
 
 // Define the routes for user authentication
-router.post('/register', registerUser);
-router.post('/login', loginUser);
+router.post('/register', registerValidationRules(), registerUser);
+router.post('/login', loginValidationRules(), loginUser);
 
 // Define the new route for admin login
-router.post('/admin/login', loginAdmin);
+router.post('/admin/login', loginValidationRules(), loginAdmin);
 
 // Define the new route for vendor login
-router.post('/vendor/login', loginVendor);
+router.post('/vendor/login', loginValidationRules(), loginVendor);
 
 module.exports = router;

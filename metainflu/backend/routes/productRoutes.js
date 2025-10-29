@@ -6,6 +6,8 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/productController');
+const { productValidationRules } = require('../middleware/validators/productValidator');
+const { validate } = require('../middleware/validators/validator');
 // Import all necessary middleware
 const { protect, admin, vendor } = require('../middleware/authMiddleware');
 
@@ -25,8 +27,8 @@ const adminOrVendor = (req, res, next) => {
 
 // Routes for creating and managing products (Admin or Vendor access)
 // Note: The `protect` middleware runs first, attaching `req.user`.
-router.post('/', protect, adminOrVendor, productController.createProduct);
-router.put('/:id', protect, adminOrVendor, productController.updateProduct);
+router.post('/', protect, adminOrVendor, productValidationRules(), validate, productController.createProduct);
+router.put('/:id', protect, adminOrVendor, productValidationRules(), validate, productController.updateProduct);
 router.delete('/:id', protect, adminOrVendor, productController.deleteProduct);
 
 module.exports = router;

@@ -9,12 +9,14 @@ const {
 } = require('../controllers/addressController');
 const { protect } = require('../middleware/authMiddleware');
 
+const { addressValidationRules } = require('../middleware/validators/addressValidator');
+
 router.route('/')
   .get(protect, getAddresses)
-  .post(protect, addAddress);
+  .post(protect, addressValidationRules(), addAddress);
 
 router.route('/:addressId')
-  .put(protect, updateAddress)
+  .put(protect, addressValidationRules(), updateAddress)
   .delete(protect, deleteAddress);
 
 router.route('/:addressId/default').patch(protect, setDefaultAddress);

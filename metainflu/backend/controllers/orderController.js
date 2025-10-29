@@ -1,3 +1,4 @@
+const { validationResult } = require('express-validator');
 const Order = require('../models/Order');
 const Cart = require('../models/Cart'); // Import Cart model
 const asyncHandler = require('express-async-handler');

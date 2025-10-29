@@ -3,6 +3,9 @@ const router = express.Router();
 const orderController = require('../controllers/orderController');
 const { protect } = require('../middleware/authMiddleware');
 
+const { orderValidationRules } = require('../middleware/validators/orderValidator');
+const { validate } = require('../middleware/validators/validator');
+
 // Get all orders for the authenticated user
 router.get('/myorders', protect, orderController.getMyOrders);
 
@@ -13,7 +16,7 @@ router.get('/', protect, orderController.getOrders);
 router.get('/:id', protect, orderController.getOrderById);
 
 // Create a new order
-router.post('/', protect, orderController.createOrder);
+router.post('/', protect, orderValidationRules(), validate, orderController.createOrder);
 
 // Update an order to paid
 router.put('/:id/pay', protect, orderController.updateOrderToPaid);

@@ -4,6 +4,7 @@
   the registerUser, loginUser, and loginAdmin functions. The error was likely
   caused by this file not correctly exporting loginAdmin. This version ensures it is.
 */
+const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -18,11 +19,13 @@ const generateToken = (id) => {
 
 // Handles new user registration.
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    res.status(400);
-    throw new Error('Please add all fields');
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
+
+  const { name, email, password } = req.body;
+
   const userExists = await User.findOne({ email });
   if (userExists) {
     res.status(400);
@@ -53,6 +56,11 @@ const registerUser = asyncHandler(async (req, res) => {
 
 // Handles general user login.
 const loginUser = asyncHandler(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   const { email, password } = req.body;
   const user = await User.findOne({ email });
   if (user && (await bcrypt.compare(password, user.password))) {
@@ -72,6 +80,11 @@ const loginUser = asyncHandler(async (req, res) => {
 
 // Handles admin-specific login.
 const loginAdmin = asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     const { email, password } = req.body;
     const user = await User.findOne({ email });
 
@@ -97,6 +110,11 @@ const loginAdmin = asyncHandler(async (req, res) => {
 
 // Handles vendor-specific login.
 const loginVendor = asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     const { email, password } = req.body;
     const user = await User.findOne({ email });
 

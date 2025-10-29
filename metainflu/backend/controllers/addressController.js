@@ -1,3 +1,4 @@
+const { validationResult } = require('express-validator');
 const User = require('../models/User');
 
 // @desc    Get all shipping addresses for a user
@@ -16,6 +17,11 @@ exports.getAddresses = async (req, res) => {
 // @route   POST /api/addresses
 // @access  Private
 exports.addAddress = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const user = await User.findById(req.user.id);
     const newAddress = req.body;
@@ -37,6 +43,11 @@ exports.addAddress = async (req, res) => {
 // @route   PUT /api/addresses/:addressId
 // @access  Private
 exports.updateAddress = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const user = await User.findById(req.user.id);
     const addressId = req.params.addressId;
