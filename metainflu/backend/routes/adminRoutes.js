@@ -12,7 +12,7 @@ const {
   approveCategory,
   rejectCategory,
 } = require('../controllers/adminController');
-const { getDashboardStats } = require('../controllers/dashboardController');
+const { getDashboardStats, getPlatformOverview } = require('../controllers/dashboardController');
 const { getProductsAdmin } = require('../controllers/productController');
 const { getOrdersAdmin, updateOrderStatusAdmin } = require('../controllers/orderController');
 const {
@@ -59,8 +59,9 @@ router.use(protect, admin);
 // Health Check
 router.route('/health').get((req, res) => res.status(200).json({ message: 'Admin API is healthy' }));
 
-// Dashboard
+// Dashboard & Platform Overview
 router.route('/dashboard').get(getDashboardStats);
+router.route('/platform-overview').get(getPlatformOverview);
 
 // User management
 router.route('/users').get(getUsersAdmin);
