@@ -16,6 +16,22 @@ const getUsers = asyncHandler(async (req, res) => {
   res.json(users);
 });
 
+// @desc    Get all users for admin with pagination
+// @route   GET /api/admin/users
+// @access  Private/Admin
+const getUsersAdmin = asyncHandler(async (req, res) => {
+  const pageSize = 10;
+  const page = Number(req.query.pageNumber) || 1;
+
+  const count = await User.countDocuments({ role: 'user' }); // Only count customers
+  const users = await User.find({ role: 'user' })
+    .select('-password')
+    .limit(pageSize)
+    .skip(pageSize * (page - 1));
+
+  res.json({ users, page, pages: Math.ceil(count / pageSize) });
+});
+
 // @desc    Get all pending categories
 // @route   GET /api/admin/categories/pending
 // @access  Private/Admin
@@ -63,4 +79,5 @@ module.exports = {
   getPendingCategories,
   approveCategory,
   rejectCategory,
+  getUsersAdmin,
 };

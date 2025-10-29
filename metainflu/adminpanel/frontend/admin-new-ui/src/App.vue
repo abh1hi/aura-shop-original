@@ -1,11 +1,7 @@
 <template>
-  <div id="app">
-    <router-view />
-  </div>
+  <router-view />
 </template>
 
-<script>
-export default {
-  name: 'App'
-}
+<script setup>
+// No script needed for this basic setup
 </script>

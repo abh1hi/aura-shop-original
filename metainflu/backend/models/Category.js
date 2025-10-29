@@ -12,7 +12,7 @@ const categorySchema = new mongoose.Schema({
   description: String,
   parentCategory: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',
+    ref: 'ParentCategory',
   },
   path: [String],
   filters: [{

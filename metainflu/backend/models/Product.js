@@ -36,6 +36,21 @@ const productSchema = new mongoose.Schema({
   },
   modelNumber: { type: String },
   gtin: { type: String },
+  // New hierarchical category fields
+  parentCategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ParentCategory',
+  },
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+  },
+  subCategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'SubCategory',
+  },
+
+  // Deprecated, to be removed after migration
   categories: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',

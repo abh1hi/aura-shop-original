@@ -161,6 +161,56 @@ const updateOrderToDelivered = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Get all orders for admin with pagination
+// @route   GET /api/admin/orders
+// @access  Private/Admin
+const getOrdersAdmin = asyncHandler(async (req, res) => {
+  const pageSize = 10;
+  const page = Number(req.query.pageNumber) || 1;
+
+  const count = await Order.countDocuments({});
+  const orders = await Order.find({})
+    .populate('user', 'id name')
+    .limit(pageSize)
+    .skip(pageSize * (page - 1))
+    .sort({ createdAt: -1 });
+
+  res.json({ orders, page, pages: Math.ceil(count / pageSize) });
+});
+
+// @desc    Update order status by admin
+// @route   PUT /api/admin/orders/:id/status
+// @access  Private/Admin
+const updateOrderStatusAdmin = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  const { status } = req.body;
+
+  if (order) {
+    order.status = status;
+
+    // Optionally update delivered status if the new status is 'delivered'
+    if (status === 'delivered') {
+      order.isDelivered = true;
+      order.deliveredAt = Date.now();
+    } else {
+      order.isDelivered = false;
+      order.deliveredAt = null;
+    }
+    
+    // Optionally update paid status
+    if (status === 'paid') {
+        order.isPaid = true;
+        order.paidAt = Date.now();
+    }
+
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+  } else {
+    res.status(404);
+    throw new Error('Order not found');
+  }
+});
+
 module.exports = {
   createOrder,
   getOrderById,
@@ -168,4 +218,6 @@ module.exports = {
   getMyOrders, // Export the new function
   getOrders,
   updateOrderToDelivered,
+  getOrdersAdmin,
+  updateOrderStatusAdmin,
 };
