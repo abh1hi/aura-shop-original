@@ -304,11 +304,11 @@ const saveCategory = async () => {
   processing.value = true;
   try {
     if (editingCategory.value) {
-      // Update existing category
+      // Update existing category - use admin endpoint for full access
       await apiClient.put(`/categories/${editingCategory.value._id}`, form.value);
       emit('alert', 'success', 'Category updated successfully');
     } else {
-      // Create new category
+      // Create new category - use admin endpoint
       await apiClient.post('/categories', form.value);
       emit('alert', 'success', 'Category created successfully');
     }
