@@ -25,7 +25,7 @@
             <label for="brand" class="block text-sm font-medium text-text-secondary mb-1">Brand *</label>
             <select id="brand" v-model="selectedBrand" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary">
               <option value="">Select Brand</option>
-              <option v-for="brand in brands" :key="brand._id" :value="brand._id">{{ brand.name }}</option>
+              <option v-for="brand in brands" :key="brand._id" :value="brand._id">{{ brand.storeName }}</option>
             </select>
             <p v-if="getFieldError('brand')" class="text-red-500 text-sm mt-1">{{ getFieldError('brand') }}</p>
             <p class="text-xs text-gray-500 mt-1">Manage your brands under <router-link class="text-primary underline" to="/brands">My Brands</router-link>.</p>
@@ -158,7 +158,14 @@ const addVariant = () => newProduct.value.variants.push({ sku: '', price: 0, sto
 const removeVariant = (index) => { if (newProduct.value.variants.length > 1) newProduct.value.variants.splice(index, 1) }
 
 const fetchCategories = async () => { categories.value = await categoryService.getCategories() }
-const fetchBrands = async () => { brands.value = await vendorBrandService.getBrands() }
+const fetchBrands = async () => {
+  try {
+    const response = await vendorBrandService.getBrands();
+    brands.value = response.data;
+  } catch (e) {
+    console.error('Failed to fetch brands:', e);
+  }
+}
 
 const saveProduct = async () => {
   errorMessage.value = ''

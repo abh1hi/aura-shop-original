@@ -21,7 +21,7 @@ const handleResponse = async (response) => {
         let msg = 'Validation failed';
         if (errorData.message) msg = errorData.message;
         else if (errorData.errors) {
-          if (Array.isArray(errorData.errors)) msg = `Validation failed: ${errorData.errors.map(e => e.message || e).join(', ')}`;
+          if (Array.isArray(errorData.errors)) msg = `Validation failed: ${errorData.errors.map(e => e.msg || e).join(', ')}`;
           else if (typeof errorData.errors === 'object') msg = `Validation failed: ${Object.entries(errorData.errors).map(([k,v]) => `${k}: ${Array.isArray(v)?v.join(', '):v}`).join(', ')}`;
         }
         if (/brand is required/i.test(msg)) throw new Error('Brand is required');

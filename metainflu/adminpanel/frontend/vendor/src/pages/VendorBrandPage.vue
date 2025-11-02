@@ -10,13 +10,13 @@
     <div class="grid gap-4 sm:grid-cols-2">
       <div v-for="b in brands" :key="b._id" class="border rounded p-4">
         <div class="flex items-center justify-between">
-          <h2 class="font-semibold">{{ b.name }}</h2>
+          <h2 class="font-semibold">{{ b.storeName }}</h2>
           <div class="space-x-2">
             <button @click="openEdit(b)" class="px-3 py-1 bg-blue-500 text-white rounded text-sm">Edit</button>
             <button @click="remove(b._id)" class="px-3 py-1 bg-red-500 text-white rounded text-sm">Delete</button>
           </div>
         </div>
-        <p class="text-sm text-gray-600 mt-1" v-if="b.description">{{ b.description }}</p>
+        <p class="text-sm text-gray-600 mt-1" v-if="b.aboutUs">{{ b.aboutUs }}</p>
         <img v-if="b.logoUrl" :src="b.logoUrl" alt="logo" class="mt-2 h-12 object-contain"/>
       </div>
     </div>
@@ -62,31 +62,45 @@ const form = ref({ name: '', description: '', logoUrl: '' })
 
 const load = async () => {
   error.value = ''
-  try { brands.value = await vendorBrandService.getBrands() } catch (e) { error.value = e.message || 'Failed to load brands' }
+  try {
+    const response = await vendorBrandService.getBrands();
+    brands.value = response.data;
+  } catch (e) {
+    error.value = e.message || 'Failed to load brands';
+  }
 }
 
 const openCreate = () => { editing.value = false; currentId.value = null; form.value = { name: '', description: '', logoUrl: '' }; showModal.value = true }
-const openEdit = (b) => { editing.value = true; currentId.value = b._id; form.value = { name: b.name, description: b.description || '', logoUrl: b.logoUrl || '' }; showModal.value = true }
+const openEdit = (b) => { editing.value = true; currentId.value = b._id; form.value = { name: b.storeName, description: b.aboutUs || '', logoUrl: b.logoUrl || '' }; showModal.value = true }
 const close = () => { showModal.value = false }
 
 const save = async () => {
   if (!form.value.name || !form.value.name.trim()) { error.value = 'Name is required'; return }
   saving.value = true
   try {
-    if (editing.value) await vendorBrandService.updateBrand(currentId.value, form.value)
-    else await vendorBrandService.createBrand(form.value)
-    showModal.value = false
-    await load()
+    let response;
+    if (editing.value) {
+      response = await vendorBrandService.updateBrand(currentId.value, form.value);
+    } else {
+      response = await vendorBrandService.createBrand(form.value);
+    }
+    showModal.value = false;
+    await load();
   } catch (e) {
-    error.value = e.message || 'Save failed'
+    error.value = e.response?.data?.message || e.message || 'Save failed';
   } finally {
-    saving.value = false
+    saving.value = false;
   }
 }
 
 const remove = async (id) => {
   if (!confirm('Delete this brand?')) return
-  try { await vendorBrandService.deleteBrand(id); await load() } catch (e) { error.value = e.message || 'Delete failed' }
+  try {
+    await vendorBrandService.deleteBrand(id);
+    await load();
+  } catch (e) {
+    error.value = e.response?.data?.message || e.message || 'Delete failed';
+  }
 }
 
 onMounted(load)

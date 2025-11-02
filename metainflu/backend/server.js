@@ -49,6 +49,7 @@ const corsOptions = {
     'http://127.0.0.1:5174',
     'https://3czzqk3l-5174.use2.devtunnels.ms',
     'https://3czzqk3l-5173.use2.devtunnels.ms',
+    'http://3czzqk3l-5173.use2.devtunnels.ms',
     'https://automatic-sniffle-976j6j599wgvh9vqw-5173.app.github.dev',
     
     // Capacitor Android/iOS - localhost with https
@@ -120,14 +121,14 @@ app.use('/api/admin', adminRoutes); // Admin routes FIRST (most specific) - incl
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/home', homeRoutes);
 
+// Public routes (these come after protected routes)
+app.use('/api/products', productRoutes);
+
 // General API routes with admin protection (for admin panel compatibility)
 app.use('/api', generalRoutes);
 
 // Content routes (both public and admin)
 app.use('/api/content', contentRoutes);
-
-// Public routes (these come after protected routes)
-app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/subcategories', subCategoryRoutes);
 app.use('/api/orders', orderRoutes);

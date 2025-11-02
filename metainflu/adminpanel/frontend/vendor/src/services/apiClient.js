@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Centralized axios instance for the vendor frontend.
 // Uses the backend at http://localhost:5000 by default. Change via ENV if needed.
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://3czzqk3l-5000.use2.devtunnels.ms';
 
 const api = axios.create({
   baseURL: `${BASE_URL}/api`,

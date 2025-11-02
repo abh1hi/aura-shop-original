@@ -16,294 +16,624 @@
     </div>
 
     <!-- Product Form -->
-    <div v-else-if="product" class="max-w-3xl mx-auto">
-      <div class="card p-6 sm:p-8">
-        <!-- Success Message -->
-        <div v-if="successMessage" class="bg-green-100 text-green-600 p-4 rounded-lg mb-6">
-          {{ successMessage }}
-        </div>
-        
-        <!-- Error Messages -->
-        <ValidationMessage 
-          v-if="errorMessage"
-          :errors="[{ field: 'general', message: errorMessage }]"
-          :show-title="false"
-          class="mb-6"
-        />
-        
-        <!-- Validation Errors -->
-        <ValidationMessage 
-          v-if="validationErrors.length > 0"
-          :errors="validationErrors"
-          display-mode="grouped"
-          class="mb-6"
-        />
-
-        <form @submit.prevent="saveProduct" class="space-y-6">
-          <!-- Product Name -->
-          <div>
-            <label for="name" class="block text-sm font-medium text-text-secondary mb-1">Product Name *</label>
-            <input 
-              type="text" 
-              id="name" 
-              v-model="product.name" 
-              :class="[
-                'mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary',
-                getFieldError('name') ? 'border-red-500 bg-red-50' : ''
-              ]"
-              placeholder="Enter product name"
-              @blur="validateField('name')"
-            >
-            <p v-if="getFieldError('name')" class="text-red-500 text-sm mt-1">{{ getFieldError('name') }}</p>
+    <div v-else-if="product">
+      <!-- Desktop View -->
+      <div class="hidden md:block max-w-3xl mx-auto">
+        <div class="card p-6 sm:p-8">
+          <!-- Success Message -->
+          <div v-if="successMessage" class="bg-green-100 text-green-600 p-4 rounded-lg mb-6">
+            {{ successMessage }}
           </div>
+          
+          <!-- Error Messages -->
+          <ValidationMessage 
+            v-if="errorMessage"
+            :errors="[{ field: 'general', message: errorMessage }]"
+            :show-title="false"
+            class="mb-6"
+          />
+          
+          <!-- Validation Errors -->
+          <ValidationMessage 
+            v-if="validationErrors.length > 0"
+            :errors="validationErrors"
+            display-mode="grouped"
+            class="mb-6"
+          />
 
-          <!-- Description -->
-          <div>
-            <label for="description" class="block text-sm font-medium text-text-secondary mb-1">Description *</label>
-            <textarea 
-              id="description" 
-              rows="4" 
-              v-model="product.description" 
-              :class="[
-                'mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary',
-                getFieldError('description') ? 'border-red-500 bg-red-50' : ''
-              ]"
-              placeholder="Describe your product in detail..."
-              @blur="validateField('description')"
-            ></textarea>
-            <p v-if="getFieldError('description')" class="text-red-500 text-sm mt-1">{{ getFieldError('description') }}</p>
-            <p class="text-gray-500 text-xs mt-1">{{ (product.description || '').length }}/5000 characters</p>
-          </div>
-
-          <!-- Category Selection -->
-          <div>
-            <label for="category" class="block text-sm font-medium text-text-secondary mb-1">Category</label>
-            <select 
-              id="category" 
-              v-model="selectedCategory" 
-              class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary"
-            >
-              <option value="">Select Category</option>
-              <option v-for="category in categories" :key="category._id" :value="category._id">{{ category.name }}</option>
-            </select>
-          </div>
-
-          <!-- Product Variants Section -->
-          <div class="border-t pt-6">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-text-primary">Product Variants *</h3>
-              <button 
-                type="button" 
-                @click="addVariant" 
-                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+          <form @submit.prevent="saveProduct" class="space-y-6">
+            <!-- Product Name -->
+            <div>
+              <label for="name" class="block text-sm font-medium text-text-secondary mb-1">Product Name *</label>
+              <input 
+                type="text" 
+                id="name" 
+                v-model="product.name" 
+                :class="[
+                  'mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary',
+                  getFieldError('name') ? 'border-red-500 bg-red-50' : ''
+                ]"
+                placeholder="Enter product name"
+                @blur="validateField('name')"
               >
-                Add Variant
-              </button>
+              <p v-if="getFieldError('name')" class="text-red-500 text-sm mt-1">{{ getFieldError('name') }}</p>
             </div>
-            
-            <div v-if="product.variants.length === 0" class="text-gray-500 text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-              No variants found. Click "Add Variant" to create a product variant.
+
+            <!-- Brand Selection -->
+            <div>
+              <label for="brand" class="block text-sm font-medium text-text-secondary mb-1">Brand</label>
+              <select 
+                id="brand" 
+                v-model="selectedBrand" 
+                class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary"
+              >
+                <option value="">Select Brand</option>
+                <option v-for="brand in brands" :key="brand._id" :value="brand._id">{{ brand.storeName }}</option>
+              </select>
             </div>
-            
-            <div v-for="(variant, index) in product.variants" :key="variant._id || index" class="bg-gray-50 p-4 rounded-lg mb-4">
-              <div class="flex justify-between items-center mb-3">
-                <h4 class="font-medium text-gray-700">Variant {{ index + 1 }}</h4>
+
+            <!-- Description -->
+            <div>
+              <label for="description" class="block text-sm font-medium text-text-secondary mb-1">Description *</label>
+              <textarea 
+                id="description" 
+                rows="4" 
+                v-model="product.description" 
+                :class="[
+                  'mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary',
+                  getFieldError('description') ? 'border-red-500 bg-red-50' : ''
+                ]"
+                placeholder="Describe your product in detail..."
+                @blur="validateField('description')"
+              ></textarea>
+              <p v-if="getFieldError('description')" class="text-red-500 text-sm mt-1">{{ getFieldError('description') }}</p>
+              <p class="text-gray-500 text-xs mt-1">{{ (product.description || '').length }}/5000 characters</p>
+            </div>
+
+            <!-- Category Selection -->
+            <div>
+              <label for="category" class="block text-sm font-medium text-text-secondary mb-1">Category</label>
+              <select 
+                id="category" 
+                v-model="selectedCategory" 
+                class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary"
+              >
+                <option value="">Select Category</option>
+                <option v-for="category in categories" :key="category._id" :value="category._id">{{ category.name }}</option>
+              </select>
+            </div>
+
+            <!-- Product Variants Section -->
+            <div class="border-t pt-6">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-text-primary">Product Variants *</h3>
                 <button 
                   type="button" 
-                  @click="removeVariant(index)" 
-                  class="text-red-500 hover:text-red-700"
-                  v-if="product.variants.length > 1"
+                  @click="addVariant" 
+                  class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+                >
+                  Add Variant
+                </button>
+              </div>
+              
+              <div v-if="product.variants.length === 0" class="text-gray-500 text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                No variants found. Click "Add Variant" to create a product variant.
+              </div>
+              
+              <div v-for="(variant, index) in product.variants" :key="variant._id || index" class="bg-gray-50 p-4 rounded-lg mb-4">
+                <div class="flex justify-between items-center mb-3">
+                  <h4 class="font-medium text-gray-700">Variant {{ index + 1 }}</h4>
+                  <button 
+                    type="button" 
+                    @click="removeVariant(index)" 
+                    class="text-red-500 hover:text-red-700"
+                    v-if="product.variants.length > 1"
+                  >
+                    Remove
+                  </button>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <!-- SKU -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">SKU *</label>
+                    <input 
+                      type="text" 
+                      v-model="variant.sku" 
+                      :class="[
+                        'w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500',
+                        getFieldError(`variants[${index}].sku`) ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      ]"
+                      placeholder="e.g., PROD-001"
+                      @blur="validateField(`variants[${index}].sku`)"
+                    >
+                    <p v-if="getFieldError(`variants[${index}].sku`)" class="text-red-500 text-xs mt-1">
+                      {{ getFieldError(`variants[${index}].sku`) }}
+                    </p>
+                  </div>
+                  
+                  <!-- Price -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Price (₹) *</label>
+                    <input 
+                      type="number" 
+                      v-model.number="variant.price" 
+                      :class="[
+                        'w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500',
+                        getFieldError(`variants[${index}].price`) ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      ]"
+                      min="0" 
+                      step="0.01"
+                      @blur="validateField(`variants[${index}].price`)"
+                    >
+                    <p v-if="getFieldError(`variants[${index}].price`)" class="text-red-500 text-xs mt-1">
+                      {{ getFieldError(`variants[${index}].price`) }}
+                    </p>
+                  </div>
+                  
+                  <!-- Stock -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Stock *</label>
+                    <input 
+                      type="number" 
+                      v-model.number="variant.stock" 
+                      :class="[
+                        'w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500',
+                        getFieldError(`variants[${index}].stock`) ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      ]"
+                      min="0"
+                      @blur="validateField(`variants[${index}].stock`)"
+                    >
+                    <p v-if="getFieldError(`variants[${index}].stock`)" class="text-red-500 text-xs mt-1">
+                      {{ getFieldError(`variants[${index}].stock`) }}
+                    </p>
+                  </div>
+                </div>
+                
+                <!-- Variant Status -->
+                <div class="mt-3">
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Status</label>
+                  <select v-model="variant.status" class="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Product Images -->
+            <div>
+              <div class="flex justify-between items-center mb-3">
+                <label class="block text-sm font-medium text-text-secondary">Product Images</label>
+                <button 
+                  type="button" 
+                  @click="addImage" 
+                  class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+                >
+                  Add Image
+                </button>
+              </div>
+              
+              <div v-for="(image, index) in product.images" :key="image._id || index" class="flex gap-2 mb-2">
+                <input 
+                  type="url" 
+                  v-model="image.url" 
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
+                  placeholder="https://example.com/image.jpg"
+                >
+                <input 
+                  type="text" 
+                  v-model="image.altText" 
+                  class="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
+                  placeholder="Alt text"
+                >
+                <div class="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    v-model="image.isPrimary" 
+                    @change="setPrimaryImage(index)"
+                    class="mr-1"
+                  >
+                  <label class="text-xs text-gray-600 mr-2">Primary</label>
+                </div>
+                <button 
+                  type="button" 
+                  @click="removeImage(index)" 
+                  class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
                 >
                   Remove
                 </button>
               </div>
-              
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <!-- SKU -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">SKU *</label>
-                  <input 
-                    type="text" 
-                    v-model="variant.sku" 
-                    :class="[
-                      'w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500',
-                      getFieldError(`variants[${index}].sku`) ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    ]"
-                    placeholder="e.g., PROD-001"
-                    @blur="validateField(`variants[${index}].sku`)"
-                  >
-                  <p v-if="getFieldError(`variants[${index}].sku`)" class="text-red-500 text-xs mt-1">
-                    {{ getFieldError(`variants[${index}].sku`) }}
-                  </p>
-                </div>
-                
-                <!-- Price -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Price (₹) *</label>
-                  <input 
-                    type="number" 
-                    v-model.number="variant.price" 
-                    :class="[
-                      'w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500',
-                      getFieldError(`variants[${index}].price`) ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    ]"
-                    min="0" 
-                    step="0.01"
-                    @blur="validateField(`variants[${index}].price`)"
-                  >
-                  <p v-if="getFieldError(`variants[${index}].price`)" class="text-red-500 text-xs mt-1">
-                    {{ getFieldError(`variants[${index}].price`) }}
-                  </p>
-                </div>
-                
-                <!-- Stock -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Stock *</label>
-                  <input 
-                    type="number" 
-                    v-model.number="variant.stock" 
-                    :class="[
-                      'w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500',
-                      getFieldError(`variants[${index}].stock`) ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    ]"
-                    min="0"
-                    @blur="validateField(`variants[${index}].stock`)"
-                  >
-                  <p v-if="getFieldError(`variants[${index}].stock`)" class="text-red-500 text-xs mt-1">
-                    {{ getFieldError(`variants[${index}].stock`) }}
-                  </p>
-                </div>
+            </div>
+
+            <!-- Tags -->
+            <div>
+              <label for="tags" class="block text-sm font-medium text-text-secondary mb-1">Tags</label>
+              <input 
+                type="text" 
+                id="tags" 
+                v-model="tagsInput" 
+                class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary" 
+                placeholder="Enter tags separated by commas"
+                @input="updateTags"
+              >
+              <div v-if="product.tags && product.tags.length > 0" class="flex flex-wrap gap-1 mt-2">
+                <span 
+                  v-for="(tag, index) in product.tags" 
+                  :key="index" 
+                  class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
+                >
+                  {{ tag }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Product Status -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label for="lifecycleStatus" class="block text-sm font-medium text-text-secondary mb-1">Lifecycle Status</label>
+                <select 
+                  id="lifecycleStatus" 
+                  v-model="product.lifecycleStatus" 
+                  class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary"
+                >
+                  <option value="active">Active</option>
+                  <option value="coming_soon">Coming Soon</option>
+                  <option value="discontinued">Discontinued</option>
+                  <option value="out_of_stock">Out of Stock</option>
+                </select>
               </div>
               
-              <!-- Variant Status -->
-              <div class="mt-3">
-                <label class="block text-sm font-medium text-gray-600 mb-1">Status</label>
-                <select v-model="variant.status" class="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+              <div>
+                <label class="block text-sm font-medium text-text-secondary mb-1">Features</label>
+                <div class="space-y-2">
+                  <label class="flex items-center">
+                    <input type="checkbox" v-model="product.isFeatured" class="mr-2">
+                    <span class="text-sm">Featured Product</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" v-model="product.isArchived" class="mr-2">
+                    <span class="text-sm">Archived</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between pt-6">
+              <button 
+                type="button" 
+                @click="deleteProductConfirm" 
+                class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold"
+                :disabled="isSaving"
+              >
+                Delete Product
+              </button>
+              
+              <button 
+                type="submit" 
+                class="px-6 py-3 bg-primary text-white rounded-lg shadow-sm hover:bg-opacity-90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed" 
+                :disabled="isSaving"
+              >
+                {{ isSaving ? 'Saving...' : 'Update Product' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Mobile View -->
+      <div class="block md:hidden">
+        <div class="card p-6 sm:p-8">
+          <!-- Tabs -->
+          <div class="border-b border-gray-200 mb-4">
+            <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+              <button @click="currentTab = 'general'" :class="['whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm', currentTab === 'general' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">
+                General
+              </button>
+              <button @click="currentTab = 'variants'" :class="['whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm', currentTab === 'variants' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">
+                Variants
+              </button>
+              <button @click="currentTab = 'images'" :class="['whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm', currentTab === 'images' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">
+                Images
+              </button>
+              <button @click="currentTab = 'details'" :class="['whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm', currentTab === 'details' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">
+                Details
+              </button>
+            </nav>
+          </div>
+
+          <form @submit.prevent="saveProduct" class="space-y-6">
+            <!-- General Tab -->
+            <div v-if="currentTab === 'general'">
+              <!-- Product Name -->
+              <div>
+                <label for="name-mobile" class="block text-sm font-medium text-text-secondary mb-1">Product Name *</label>
+                <input 
+                  type="text" 
+                  id="name-mobile" 
+                  v-model="product.name" 
+                  :class="[
+                    'mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary',
+                    getFieldError('name') ? 'border-red-500 bg-red-50' : ''
+                  ]"
+                  placeholder="Enter product name"
+                  @blur="validateField('name')"
+                >
+                <p v-if="getFieldError('name')" class="text-red-500 text-sm mt-1">{{ getFieldError('name') }}</p>
+              </div>
+
+              <!-- Brand Selection -->
+              <div>
+                <label for="brand-mobile" class="block text-sm font-medium text-text-secondary mb-1">Brand</label>
+                <select 
+                  id="brand-mobile" 
+                  v-model="selectedBrand" 
+                  class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary"
+                >
+                  <option value="">Select Brand</option>
+                  <option v-for="brand in brands" :key="brand._id" :value="brand._id">{{ brand.storeName }}</option>
+                </select>
+              </div>
+
+              <!-- Description -->
+              <div>
+                <label for="description-mobile" class="block text-sm font-medium text-text-secondary mb-1">Description *</label>
+                <textarea 
+                  id="description-mobile" 
+                  rows="4" 
+                  v-model="product.description" 
+                  :class="[
+                    'mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary',
+                    getFieldError('description') ? 'border-red-500 bg-red-50' : ''
+                  ]"
+                  placeholder="Describe your product in detail..."
+                  @blur="validateField('description')"
+                ></textarea>
+                <p v-if="getFieldError('description')" class="text-red-500 text-sm mt-1">{{ getFieldError('description') }}</p>
+                <p class="text-gray-500 text-xs mt-1">{{ (product.description || '').length }}/5000 characters</p>
+              </div>
+
+              <!-- Category Selection -->
+              <div>
+                <label for="category-mobile" class="block text-sm font-medium text-text-secondary mb-1">Category</label>
+                <select 
+                  id="category-mobile" 
+                  v-model="selectedCategory" 
+                  class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary"
+                >
+                  <option value="">Select Category</option>
+                  <option v-for="category in categories" :key="category._id" :value="category._id">{{ category.name }}</option>
                 </select>
               </div>
             </div>
-          </div>
 
-          <!-- Product Images -->
-          <div>
-            <div class="flex justify-between items-center mb-3">
-              <label class="block text-sm font-medium text-text-secondary">Product Images</label>
-              <button 
-                type="button" 
-                @click="addImage" 
-                class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
-              >
-                Add Image
-              </button>
+            <!-- Variants Tab -->
+            <div v-if="currentTab === 'variants'">
+              <!-- Product Variants Section -->
+              <div class="border-t pt-6">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg font-semibold text-text-primary">Product Variants *</h3>
+                  <button 
+                    type="button" 
+                    @click="addVariant" 
+                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+                  >
+                    Add Variant
+                  </button>
+                </div>
+                
+                <div v-if="product.variants.length === 0" class="text-gray-500 text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                  No variants found. Click "Add Variant" to create a product variant.
+                </div>
+                
+                <div v-for="(variant, index) in product.variants" :key="variant._id || index" class="bg-gray-50 p-4 rounded-lg mb-4">
+                  <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-medium text-gray-700">Variant {{ index + 1 }}</h4>
+                    <button 
+                      type="button" 
+                      @click="removeVariant(index)" 
+                      class="text-red-500 hover:text-red-700"
+                      v-if="product.variants.length > 1"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- SKU -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-600 mb-1">SKU *</label>
+                      <input 
+                        type="text" 
+                        v-model="variant.sku" 
+                        :class="[
+                          'w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500',
+                          getFieldError(`variants[${index}].sku`) ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        ]"
+                        placeholder="e.g., PROD-001"
+                        @blur="validateField(`variants[${index}].sku`)"
+                      >
+                      <p v-if="getFieldError(`variants[${index}].sku`)" class="text-red-500 text-xs mt-1">
+                        {{ getFieldError(`variants[${index}].sku`) }}
+                      </p>
+                    </div>
+                    
+                    <!-- Price -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-600 mb-1">Price (₹) *</label>
+                      <input 
+                        type="number" 
+                        v-model.number="variant.price" 
+                        :class="[
+                          'w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500',
+                          getFieldError(`variants[${index}].price`) ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        ]"
+                        min="0" 
+                        step="0.01"
+                        @blur="validateField(`variants[${index}].price`)"
+                      >
+                      <p v-if="getFieldError(`variants[${index}].price`)" class="text-red-500 text-xs mt-1">
+                        {{ getFieldError(`variants[${index}].price`) }}
+                      </p>
+                    </div>
+                    
+                    <!-- Stock -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-600 mb-1">Stock *</label>
+                      <input 
+                        type="number" 
+                        v-model.number="variant.stock" 
+                        :class="[
+                          'w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500',
+                          getFieldError(`variants[${index}].stock`) ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        ]"
+                        min="0"
+                        @blur="validateField(`variants[${index}].stock`)"
+                      >
+                      <p v-if="getFieldError(`variants[${index}].stock`)" class="text-red-500 text-xs mt-1">
+                        {{ getFieldError(`variants[${index}].stock`) }}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <!-- Variant Status -->
+                  <div class="mt-3">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Status</label>
+                    <select v-model="variant.status" class="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            <div v-for="(image, index) in product.images" :key="image._id || index" class="flex gap-2 mb-2">
-              <input 
-                type="url" 
-                v-model="image.url" 
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
-                placeholder="https://example.com/image.jpg"
-              >
-              <input 
-                type="text" 
-                v-model="image.altText" 
-                class="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
-                placeholder="Alt text"
-              >
-              <div class="flex items-center">
+
+            <!-- Images Tab -->
+            <div v-if="currentTab === 'images'">
+              <!-- Product Images -->
+              <div>
+                <div class="flex justify-between items-center mb-3">
+                  <label class="block text-sm font-medium text-text-secondary">Product Images</label>
+                  <button 
+                    type="button" 
+                    @click="addImage" 
+                    class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+                  >
+                    Add Image
+                  </button>
+                </div>
+                
+                <div v-for="(image, index) in product.images" :key="image._id || index" class="flex gap-2 mb-2">
+                  <input 
+                    type="url" 
+                    v-model="image.url" 
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
+                    placeholder="https://example.com/image.jpg"
+                  >
+                  <input 
+                    type="text" 
+                    v-model="image.altText" 
+                    class="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
+                    placeholder="Alt text"
+                  >
+                  <div class="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      v-model="image.isPrimary" 
+                      @change="setPrimaryImage(index)"
+                      class="mr-1"
+                    >
+                    <label class="text-xs text-gray-600 mr-2">Primary</label>
+                  </div>
+                  <button 
+                    type="button" 
+                    @click="removeImage(index)" 
+                    class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Details Tab -->
+            <div v-if="currentTab === 'details'">
+              <!-- Tags -->
+              <div>
+                <label for="tags-mobile" class="block text-sm font-medium text-text-secondary mb-1">Tags</label>
                 <input 
-                  type="checkbox" 
-                  v-model="image.isPrimary" 
-                  @change="setPrimaryImage(index)"
-                  class="mr-1"
+                  type="text" 
+                  id="tags-mobile" 
+                  v-model="tagsInput" 
+                  class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary" 
+                  placeholder="Enter tags separated by commas"
+                  @input="updateTags"
                 >
-                <label class="text-xs text-gray-600 mr-2">Primary</label>
+                <div v-if="product.tags && product.tags.length > 0" class="flex flex-wrap gap-1 mt-2">
+                  <span 
+                    v-for="(tag, index) in product.tags" 
+                    :key="index" 
+                    class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
+                  >
+                    {{ tag }}
+                  </span>
+                </div>
               </div>
+
+              <!-- Product Status -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label for="lifecycleStatus-mobile" class="block text-sm font-medium text-text-secondary mb-1">Lifecycle Status</label>
+                  <select 
+                    id="lifecycleStatus-mobile" 
+                    v-model="product.lifecycleStatus" 
+                    class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary"
+                  >
+                    <option value="active">Active</option>
+                    <option value="coming_soon">Coming Soon</option>
+                    <option value="discontinued">Discontinued</option>
+                    <option value="out_of_stock">Out of Stock</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-text-secondary mb-1">Features</label>
+                  <div class="space-y-2">
+                    <label class="flex items-center">
+                      <input type="checkbox" v-model="product.isFeatured" class="mr-2">
+                      <span class="text-sm">Featured Product</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" v-model="product.isArchived" class="mr-2">
+                      <span class="text-sm">Archived</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between pt-6">
               <button 
                 type="button" 
-                @click="removeImage(index)" 
-                class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                @click="deleteProductConfirm" 
+                class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold"
+                :disabled="isSaving"
               >
-                Remove
+                Delete Product
+              </button>
+              
+              <button 
+                type="submit" 
+                class="px-6 py-3 bg-primary text-white rounded-lg shadow-sm hover:bg-opacity-90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed" 
+                :disabled="isSaving"
+              >
+                {{ isSaving ? 'Saving...' : 'Update Product' }}
               </button>
             </div>
-          </div>
-
-          <!-- Tags -->
-          <div>
-            <label for="tags" class="block text-sm font-medium text-text-secondary mb-1">Tags</label>
-            <input 
-              type="text" 
-              id="tags" 
-              v-model="tagsInput" 
-              class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary" 
-              placeholder="Enter tags separated by commas"
-              @input="updateTags"
-            >
-            <div v-if="product.tags && product.tags.length > 0" class="flex flex-wrap gap-1 mt-2">
-              <span 
-                v-for="(tag, index) in product.tags" 
-                :key="index" 
-                class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
-              >
-                {{ tag }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Product Status -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-              <label for="lifecycleStatus" class="block text-sm font-medium text-text-secondary mb-1">Lifecycle Status</label>
-              <select 
-                id="lifecycleStatus" 
-                v-model="product.lifecycleStatus" 
-                class="mt-1 block w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:ring-primary focus:border-primary"
-              >
-                <option value="active">Active</option>
-                <option value="coming_soon">Coming Soon</option>
-                <option value="discontinued">Discontinued</option>
-                <option value="out_of_stock">Out of Stock</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-text-secondary mb-1">Features</label>
-              <div class="space-y-2">
-                <label class="flex items-center">
-                  <input type="checkbox" v-model="product.isFeatured" class="mr-2">
-                  <span class="text-sm">Featured Product</span>
-                </label>
-                <label class="flex items-center">
-                  <input type="checkbox" v-model="product.isArchived" class="mr-2">
-                  <span class="text-sm">Archived</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex justify-between pt-6">
-            <button 
-              type="button" 
-              @click="deleteProductConfirm" 
-              class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold"
-              :disabled="isSaving"
-            >
-              Delete Product
-            </button>
-            
-            <button 
-              type="submit" 
-              class="px-6 py-3 bg-primary text-white rounded-lg shadow-sm hover:bg-opacity-90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed" 
-              :disabled="isSaving"
-            >
-              {{ isSaving ? 'Saving...' : 'Update Product' }}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -322,6 +652,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import vendorService from '../services/vendorService';
 import categoryService from '../services/categoryService';
+import vendorBrandService from '../services/vendorBrandService';
 import { productValidation, errorUtils } from '../utils/validation';
 import ValidationMessage from '../components/ValidationMessage.vue';
 
@@ -331,13 +662,16 @@ const router = useRouter();
 // Reactive data
 const product = ref(null);
 const categories = ref([]);
+const brands = ref([]);
 const selectedCategory = ref('');
+const selectedBrand = ref('');
 const tagsInput = ref('');
 const isLoading = ref(true);
 const isSaving = ref(false);
 const successMessage = ref('');
 const errorMessage = ref('');
 const validationErrors = ref([]);
+const currentTab = ref('general');
 
 // Computed
 const getFieldError = computed(() => {
@@ -379,7 +713,7 @@ const validateField = (fieldName) => {
 
 const validateForm = () => {
   validationErrors.value = [];
-  const errors = productValidation.validateProduct(product.value);
+  const errors = productValidation.validateProduct({ ...product.value, brand: selectedBrand.value });
   validationErrors.value = errors;
   return errors.length === 0;
 };
@@ -470,6 +804,11 @@ const fetchProduct = async () => {
       if (product.value.categories && product.value.categories.length > 0) {
         selectedCategory.value = product.value.categories[0]._id || product.value.categories[0];
       }
+
+      // Set brand
+      if (product.value.brand) {
+        selectedBrand.value = product.value.brand._id || product.value.brand;
+      }
       
       // Set tags input
       if (product.value.tags) {
@@ -492,6 +831,15 @@ const fetchCategories = async () => {
   }
 };
 
+const fetchBrands = async () => {
+  try {
+    const response = await vendorBrandService.getBrands();
+    brands.value = response.data;
+  } catch (error) {
+    console.error('Failed to fetch brands:', error);
+  }
+};
+
 const saveProduct = async () => {
   errorMessage.value = '';
   successMessage.value = '';
@@ -508,6 +856,7 @@ const saveProduct = async () => {
     const updatePayload = {
       name: product.value.name?.trim(),
       description: product.value.description?.trim(),
+      brand: selectedBrand.value,
       variants: product.value.variants.map(variant => ({
         ...variant,
         sku: variant.sku?.trim()
@@ -552,7 +901,8 @@ const deleteProductConfirm = async () => {
 onMounted(() => {
   Promise.all([
     fetchProduct(),
-    fetchCategories()
+    fetchCategories(),
+    fetchBrands()
   ]);
 });
 </script>
