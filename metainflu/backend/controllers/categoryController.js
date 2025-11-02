@@ -65,7 +65,9 @@ const updateCategory = asyncHandler(async (req, res) => {
   if (category) {
     category.name = name || category.name;
     category.description = description || category.description;
-    category.parentCategory = parentCategory || category.parentCategory;
+    if (parentCategory) {
+      category.parentCategory = parentCategory;
+    }
     category.filters = filters || category.filters;
     category.image = image || category.image;
     category.status = status || category.status;

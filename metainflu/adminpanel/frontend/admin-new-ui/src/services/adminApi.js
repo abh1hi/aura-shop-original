@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create admin-specific API client
 const adminApiClient = axios.create({
-  baseURL: 'http://localhost:5000/api/admin',
+  baseURL: 'https://3czzqk3l-5000.use2.devtunnels.ms/api/admin',
   headers: {
     'Content-Type': 'application/json',
   },

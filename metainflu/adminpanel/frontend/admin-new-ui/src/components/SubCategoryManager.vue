@@ -82,12 +82,12 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                {{ getCategoryName(subCategory.category) }}
+                {{ subCategory.category ? subCategory.category.name : 'Unknown' }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                {{ getParentCategoryName(subCategory.category) }}
+                {{ subCategory.category && subCategory.category.parentCategory ? subCategory.category.parentCategory.name : 'Unknown' }}
               </span>
             </td>
             <td class="px-6 py-4 text-sm text-gray-500">
@@ -252,19 +252,6 @@ const formatDate = (dateString) => {
   });
 };
 
-const getCategoryName = (categoryId) => {
-  const category = props.categories.find(c => c._id === categoryId);
-  return category ? category.name : 'Unknown';
-};
-
-const getParentCategoryName = (categoryId) => {
-  const category = props.categories.find(c => c._id === categoryId);
-  if (!category) return 'Unknown';
-  
-  const parent = props.parentCategories.find(p => p._id === category.parentCategory);
-  return parent ? parent.name : 'Unknown';
-};
-
 const getCategoryDisplayName = (category) => {
   const parent = props.parentCategories.find(p => p._id === category.parentCategory);
   const parentName = parent ? parent.name : 'Unknown';
@@ -289,7 +276,7 @@ const editSubCategory = (subCategory) => {
   form.value = {
     name: subCategory.name,
     description: subCategory.description || '',
-    category: subCategory.category || '',
+    category: subCategory.category ? subCategory.category._id : '',
     image: subCategory.image || ''
   };
   showModal.value = true;
@@ -298,13 +285,25 @@ const editSubCategory = (subCategory) => {
 const saveSubCategory = async () => {
   processing.value = true;
   try {
+    const selectedCategory = props.categories.find(c => c._id === form.value.category);
+    if (!selectedCategory) {
+      emit('alert', 'error', 'Please select a valid category.');
+      processing.value = false; // Also stop processing
+      return;
+    }
+
+    const payload = {
+      ...form.value,
+      parentCategory: selectedCategory.parentCategory
+    };
+
     if (editingSubCategory.value) {
       // Update existing subcategory
-      await apiClient.admin.put(`/subcategories/${editingSubCategory.value._id}`, form.value);
+      await apiClient.admin.put(`/subcategories/${editingSubCategory.value._id}`, payload);
       emit('alert', 'success', 'Subcategory updated successfully');
     } else {
       // Create new subcategory
-      await apiClient.admin.post('/subcategories', form.value);
+      await apiClient.admin.post('/subcategories', payload);
       emit('alert', 'success', 'Subcategory created successfully');
     }
     

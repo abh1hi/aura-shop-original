@@ -3,6 +3,9 @@
     <!-- Desktop Sidebar -->
     <VendorSidebar class="hidden lg:flex" />
 
+    <!-- Backdrop Overlay -->
+    <div v-if="isMobileNavOpen" @click="isMobileNavOpen = false" class="fixed inset-0 bg-black/30 z-40 lg:hidden"></div>
+
     <div class="flex-1 flex flex-col">
       <!-- Mobile Header -->
       <VendorMobileHeader @toggle-sidebar="isMobileNavOpen = !isMobileNavOpen" class="lg:hidden" />

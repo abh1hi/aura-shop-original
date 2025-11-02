@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Create main API client for general endpoints
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'https://3czzqk3l-5000.use2.devtunnels.ms/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -12,7 +12,7 @@ const apiClient = axios.create({
 
 // Create admin API client for admin-specific endpoints
 const adminApiClient = axios.create({
-  baseURL: 'http://localhost:5000/api/admin',
+  baseURL: 'https://3czzqk3l-5000.use2.devtunnels.ms/api/admin',
   headers: {
     'Content-Type': 'application/json',
   },

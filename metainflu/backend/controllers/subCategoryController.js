@@ -26,7 +26,13 @@ const getSubCategories = asyncHandler(async (req, res) => {
   if (req.query.category) {
     filter.category = req.query.category;
   }
-  const subCategories = await SubCategory.find(filter);
+  const subCategories = await SubCategory.find(filter).populate({
+    path: 'category',
+    populate: {
+      path: 'parentCategory',
+      model: 'ParentCategory'
+    }
+  });
   res.json(subCategories);
 });
 
